@@ -91,7 +91,7 @@ bool setup(
 }
 
 bool getImageStream(cv::VideoCapture& img_stream) {
-	img_stream.open("C:/Users/tigist/Desktop/SEAM4US/video/Saturday (12-10-2013)(12.53-14.03).mp4");
+	img_stream.open("C:/Data from server/Saturday (12-10-2013)(12.53-14.03).mp4");
 	return img_stream.isOpened();
 }
 
