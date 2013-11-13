@@ -91,7 +91,7 @@ bool setup(
 }
 
 bool getImageStream(cv::VideoCapture& img_stream) {
-	img_stream.open("C:/Users/tigist/Desktop/SEAM4US/video/Saturday (12-10-2013)(12.53-14.03).mp4");
+	img_stream.open("C:/Data from server/Saturday (12-10-2013)(12.53-14.03).mp4");
 	return img_stream.isOpened();
 }
 
@@ -152,10 +152,10 @@ int main(int argc, const char** argv) {
 	bool roi_masks_created = false;			bool perspective_matrices_loaded = false;	bool offline_camera_switched = false;
 
 	// initialize and set configuration variables
-	double scale_factor = 0.5;
+	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = 10;
+	int amount_of_training_cycles = 0;
 	int amount_of_training_cycles_from_nothing = 10;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
@@ -259,7 +259,7 @@ int main(int argc, const char** argv) {
 				}
 
 				// once the backgrounds are trained, start the processing
-				// if (training_cycles == 0) {
+				// if (training_cycles <= 0) {
 				if (1) {
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
@@ -276,14 +276,14 @@ int main(int argc, const char** argv) {
 				    if (frame_counter > image_processing_threshold)	{
 					  // std::cout << "frame_feature m: " <<  frame_feature << std::endl;
 					  sum_feature  = sum_feature + frame_feature;
-					  averaging_frames += 1;
+
 					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
-				    	std::cout << sample_frame << std::endl;
 				    	sum_feature = sum_feature/averaging_frames;
-				    	Counting_file << sample_frame << " " << sum_feature << "\n";
+				    	std::cout << sum_feature << std::endl;
+				    	//if (sum_feature==0)  cv::waitKey(0);
+				    	Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
 				    	sum_feature = 0;
-				    	averaging_frames = 0;
 				    	sample_frame++;
 				    }
 				}
@@ -333,7 +333,7 @@ int main(int argc, const char** argv) {
 			key = -1;
 			std::cout << "entering the region-of-interest editor." << std::endl;
 		}
-		else if(key >= 0) {
+		else if(key == 27) {
 			std::cout << key << std::endl;
 			break;
 		}

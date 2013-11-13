@@ -99,46 +99,53 @@ void bgfgImage(cv::Mat& resized_frame,
 	bg_model(img, fgmask, learning_rate);
 
 	if (frame_counter == maximum_frame_threshold - 1) {
-		std::cout << "saving background" << std::endl;
+		//std::cout << "saving background" << std::endl;
 		bg_model.getBackgroundImage(background_image);
 		cv::imwrite(addStr("data/backgrounds/background_",cycle_position,".png"),background_image);
 	}
 
 	if (frame_counter > 60 && !training_only) {
 		bg_model.getBackgroundImage(background_image);
+		// cv::imshow("BG", background_image);
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
+		// cv::imshow("FG", fgmask);
 		/* Apply erosion operation */
 		int parameter = 1;
-		applyErosionParameters(fgmask, fgmask1, parameter);
+//		applyErosionParameters(fgmask, fgmask1, parameter);
 
 		/* Apply dilation operation */
-		parameter = 1;
-		applyDilationParameters(fgmask1, fgmask2, parameter);
+		parameter = 4;
+		applyDilationParameters(fgmask, fgmask2, parameter);
 		//  cv::createTrackbar( " Canny thresh:", "image", &thresh, max_thresh);
 		applyEdgeThreshold(img, edgemask, threshold);
+		// cv::imshow("Edges", edgemask);
 		cv::bitwise_and(fgmask2, edgemask, fgmask2);
 
-		cv::add(fgmask1, fgmask2, fgmask3);
-		// cv::imshow( "fgmask3", fgmask3);
+//		cv::add(fgmask1, fgmask2, fgmask3);
+		cv::add(fgmask, fgmask2, fgmask3);
+
 
 		// fill holes on the foreground mask
-		parameter = 3;
-		applyDilationParameters(fgmask3, fgmask3, parameter);
-		parameter = 3;
-		applyErosionParameters(fgmask3, fgmask3, parameter);
+//		parameter = 12;
+//		applyDilationParameters(fgmask3, fgmask3, parameter);
+//		parameter = 16;
+//		applyErosionParameters(fgmask3, fgmask3, parameter);
 
 		cv::threshold(fgmask3, fgmask3, 0, 255, 0);
 		// Find contours
 		contours.clear();
+		// cv::imshow( "fgmask3", fgmask3);
 		cv::findContours( fgmask3, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
+
+		  // cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
 		  //  Draw contours
 		  frame_feature = 0;
 		  int tmpi = contours.size();
 		  for(int i = 0; i< tmpi; i++ )
 		  {
 			   int c_size = contours[i].size() ;
-			   if (c_size > 30)
+			   if (c_size > 120)
 			   {
 				cv::Scalar color = cv::Scalar( 1, 0, 0);
 				cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
@@ -167,10 +174,9 @@ void bgfgImage(cv::Mat& resized_frame,
 			    cv::Scalar pre = sum(Individual_blob);
 				double feature =  pre.val[0] * perspective_para;
 				frame_feature = frame_feature + feature;
-				// cv::imshow( "Blob", Individual_blob);
-				// cv::waitKey(0);
 			   }
 		  }
+		// cv::imshow( "Blob", Individual_blob);
 	}
 }
 
