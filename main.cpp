@@ -91,7 +91,7 @@ bool setup(
 }
 
 bool getImageStream(cv::VideoCapture& img_stream) {
-	img_stream.open("C:/Data from server/Saturday (12-10-2013)(12.53-14.03).mp4");
+	img_stream.open("C:/Data from server/Thursday (03-10-2013)(08.28-09.39).mp4");
 	return img_stream.isOpened();
 }
 
@@ -163,7 +163,7 @@ int main(int argc, const char** argv) {
 	double sum_feature = 0;
 	// save results in file
 	std::ofstream Counting_file;
-	Counting_file.open("Saturday_People_counting.txt");
+	Counting_file.open("thursday_People_counting.txt");
 	int sample_frame = 1 ;
 
 	// determine how many cycles the background should be trained before the analysis begins.
@@ -280,7 +280,7 @@ int main(int argc, const char** argv) {
 					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
 				    	sum_feature = sum_feature/averaging_frames;
-				    	std::cout << sum_feature << std::endl;
+				    	std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
 				    	//if (sum_feature==0)  cv::waitKey(0);
 				    	Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
 				    	sum_feature = 0;

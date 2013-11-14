@@ -32,7 +32,7 @@
 
 	void drawPolygons(std::vector < std::vector<cv::Point> >& line_vector, cv::Mat canvas, cv::Scalar color);
 
-// ocr functions
+// machine learning functions
 	void serializeImage(cv::Mat& data, cv::Mat& image, int columns, int rows);
 
 	void serializeImage(cv::Mat& data, cv::Mat& image, int columns, int rows, int offset);
@@ -41,6 +41,7 @@
 
 	bool trainOCR(cv::KNearest& OCR);
 
+// ocr functions
 	int identifyNumber(cv::KNearest& OCR, cv::Mat& number);
 
 	int identifyCamera(cv::KNearest& OCR, cv::Mat& number1, cv::Mat& number2, cv::Mat& number3);
@@ -113,10 +114,6 @@
 
 
 // analysis functions
-	void writeResults(double value, int cycle_position);
-
-	void convertFeaturesToPeople(int features, int cycle_position);
-
 	void bgfgImage(
 					cv::Mat& resized_frame,
 					cv::BackgroundSubtractorMOG2& bg_model,
@@ -132,7 +129,10 @@
 					);
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);
 
+// data writing functions
+	void writeResults(double value, int cycle_position);
 
+	void convertFeaturesToPeople(int features, int cycle_position);
 
 
 
