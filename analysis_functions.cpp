@@ -12,17 +12,6 @@
 
 #include <seam4us_functions.h>
 
-void writeResults(double value, int cycle_position) {
-	// this should write the data to a text file
-}
-
-void convertFeaturesToPeople(int features, int cycle_position) {
-	// this should convert the features to people, perhaps per camera
-	double people = 0;
-
-	writeResults(people,cycle_position);
-}
-
 void applyErosionParameters(cv::Mat& input_image, cv::Mat& output_image, int& para) {
   // erosion operation, erosion_type: MORPH_RECT = 0; MORPH_CROSS = 1; MORPH_ELLIPSE = 2;
   cv::Mat element = cv::getStructuringElement( 2, cv::Size( 2*para + 1, 2*para+1 ),
@@ -172,7 +161,7 @@ void bgfgImage(cv::Mat& resized_frame,
 					pp.y = jj;
 				}
 			    cv::Scalar pre = sum(Individual_blob);
-				double feature =  pre.val[0] * perspective_para;
+				double feature =  pre.val[0] * pow(perspective_para,2.0);
 				frame_feature = frame_feature + feature;
 			   }
 		  }
