@@ -80,6 +80,7 @@ bool setup(
 		}
 	}
 
+	// loading the perspective matrices into memory
 	if (!perspective_matrices_loaded && !setup_perspective) {
 		std::cout << "Loading the perspective matrices";
 		perspective_matrices.clear();
@@ -141,6 +142,7 @@ int main(int argc, const char** argv) {
 	std::vector<cv::Mat> camera_frames (amount_of_cameras);
 	std::vector<std::vector<cv::Mat> > camera_clips (amount_of_cameras);
 	std::vector<cv::BackgroundSubtractorMOG2> background_model_vector(amount_of_cameras);
+	std::vector<std::vector<float> > training_coefficients;
 
 	// initialize the integers
 	int key = -1;							int frame_counter = 0;				int cycle_position = 0;		int previous_cycle_position = 0;
@@ -159,12 +161,29 @@ int main(int argc, const char** argv) {
 	int amount_of_training_cycles_from_nothing = 10;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
+	int amount_of_training_coefficients = 3;
 	double frame_feature = 0;
 	double sum_feature = 0;
 	// save results in file
 	std::ofstream Counting_file;
 	Counting_file.open("thursday_People_counting.txt");
 	int sample_frame = 1 ;
+
+	// check if the system is Trained (features-to-people).
+	// We allow the system to pass if the ROI or the Perspectives need to be set up.
+	// After ROI or perspective changes, the system HAS to be retrained.
+	if (!setup_ROI && !setup_perspective) {
+		std::cout << "Checking training status... ";
+		if (checkTrainingStatus(amount_of_cameras,amount_of_training_coefficients)) {
+			getTrainedCoefficients(training_coefficients);
+			std::cout << "Done." << std::endl;
+		}
+		else {
+			std::cout << "The system needs to be trained first: coefficients.txt cannot be found or has the wrong dimensions." << std::endl;
+			std::cout << "Expecting format: " << amount_of_training_coefficients << "x" << amount_of_cameras << ", comma separated. Quitting.." << std::endl;
+			return -1;
+		}
+	}
 
 	// determine how many cycles the background should be trained before the analysis begins.
 	std::cout << "Getting the amount of required training cycles: ";

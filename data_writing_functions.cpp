@@ -16,9 +16,13 @@ void writeResults(double value, int cycle_position) {
 	// this should write the data to a text file
 }
 
-void convertFeaturesToPeople(int features, int cycle_position) {
-	// this should convert the features to people, perhaps per camera
-	double people = 0;
+void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients) {
+	// this should convert the features to people
+	// the formula used is a*x^b + c
+	float a = training_coefficients[cycle_position][0];
+	float b = training_coefficients[cycle_position][1];
+	float c = training_coefficients[cycle_position][2];
+	double people = a*pow(features,b) + c;
 
 	writeResults(people,cycle_position);
 }

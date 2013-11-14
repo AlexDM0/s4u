@@ -12,6 +12,14 @@
 
 #include <seam4us_functions.h>
 
+bool checkTrainingStatus(int amount_of_cameras, int amount_of_training_coefficients) {
+	return readCSV("data/machine_learning/system_trained_coefficients/coefficients.txt",amount_of_training_coefficients,amount_of_cameras);
+}
+
+bool getTrainedCoefficients(std::vector<std::vector<float> >& coefficients) {
+	return readCSV("data/machine_learning/system_trained_coefficients/coefficients.txt",coefficients);
+}
+
 void serializeImage(cv::Mat& data, cv::Mat& image, int columns, int rows) {
 	// check the dimensions
 	if (rows != image.rows && columns != image.cols) {
@@ -56,7 +64,7 @@ void testOCR(cv::KNearest& OCR) {
 		for (int j = 0; j < 50; j++) {
 			// get the filename
 			filename.str("");
-			filename << "data/ocr_test_set/" << i << "/00";
+			filename << "data/machine_learning/ocr_test_set/" << i << "/00";
 			if (j < 9)
 				filename << "0";
 			filename << j+1 << ".jpg";
@@ -100,7 +108,7 @@ bool trainOCR(cv::KNearest& OCR) {
 		for (int j = 0; j < 75; j++) {
 			// get the filename
 			filename.str("");
-			filename << "data/ocr_training_set/" << i << "/00";
+			filename << "data/machine_learning/ocr_training_set/" << i << "/00";
 			if (j < 9)
 				filename << "0";
 			filename << j+1 << ".jpg";

@@ -12,22 +12,27 @@
 
 #include <seam4us_functions.h>
 
-bool readCSV(std::string filename, std::vector< std::vector<int> >& content) {
+bool readCSV(std::string filename, int x_ref, int y_ref) {
 	std::ifstream datafile(filename.c_str());
+	int x = 0;
+	int y = 0;
 	if (datafile) {
 		std::string line;
 		while(std::getline(datafile,line)) {
 			std::stringstream  lineStream(line);
 			std::string        cell;
 			std::vector<int> row_content;
+			x = 0;
 			while(std::getline(lineStream,cell,',')) {
-				row_content.push_back(atoi(cell.c_str()));
+				x += 1;
 			}
-			content.push_back(row_content);
-			row_content.clear();
+			y += 1;
 		}
 		datafile.close();
-		return true;
+		if (x == x_ref && y == y_ref)
+			return true;
+		else
+			return false;
 	}
 	else {
 		datafile.close();

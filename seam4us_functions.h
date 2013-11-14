@@ -1,5 +1,5 @@
 //misc
-	bool readCSV(std::string filename, std::vector< std::vector<int> >& content);
+	bool readCSV(std::string filename, int x, int y);
 
 	bool readCSV(std::string filename, std::vector< std::vector<float> >& content);
 
@@ -33,6 +33,10 @@
 	void drawPolygons(std::vector < std::vector<cv::Point> >& line_vector, cv::Mat canvas, cv::Scalar color);
 
 // machine learning functions
+	bool checkTrainingStatus(int amount_of_cameras, int amount_of_training_coefficients);
+
+	bool getTrainedCoefficients(std::vector<std::vector<float> >& coefficients);
+
 	void serializeImage(cv::Mat& data, cv::Mat& image, int columns, int rows);
 
 	void serializeImage(cv::Mat& data, cv::Mat& image, int columns, int rows, int offset);
@@ -127,12 +131,13 @@
 					cv::Mat perspective_matrix,
 					double& frame_feature
 					);
+
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);
 
 // data writing functions
 	void writeResults(double value, int cycle_position);
 
-	void convertFeaturesToPeople(int features, int cycle_position);
+	void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients);
 
 
 
