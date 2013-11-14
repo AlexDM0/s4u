@@ -129,7 +129,8 @@
 					int maximum_frame_threshold,
 					bool training_only,
 					cv::Mat perspective_matrix,
-					double& frame_feature
+					double& frame_feature,
+					double max_perspective_multiplier
 					);
 
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);

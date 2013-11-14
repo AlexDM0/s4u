@@ -73,7 +73,9 @@ void bgfgImage(cv::Mat& resized_frame,
 				int maximum_frame_threshold,
 				bool training_only,
 				cv::Mat perspective_matrix,
-				double& frame_feature) {
+				double& frame_feature,
+				double max_perspective_multiplier
+				) {
 	cv::Mat img, background_image, edgemask, fgmask, fgmask1, fgmask2, fgmask3;
 	int threshold = 10;
 	std::vector<std::vector<cv::Point> > contours;
@@ -161,7 +163,7 @@ void bgfgImage(cv::Mat& resized_frame,
 					pp.y = jj;
 				}
 			    cv::Scalar pre = sum(Individual_blob);
-				double feature =  pre.val[0] * pow(perspective_para,2.0);
+				double feature =  pre.val[0] * pow(std::min(max_perspective_multiplier,perspective_para),2.0);
 				frame_feature = frame_feature + feature;
 			   }
 		  }

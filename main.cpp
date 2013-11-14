@@ -164,6 +164,7 @@ int main(int argc, const char** argv) {
 	int amount_of_training_coefficients = 3;
 	double frame_feature = 0;
 	double sum_feature = 0;
+	double max_perspective_multiplier = 5;
 	// save results in file
 	std::ofstream Counting_file;
 	Counting_file.open("thursday_People_counting.txt");
@@ -290,7 +291,9 @@ int main(int argc, const char** argv) {
 								maximum_frame_threshold,
 								false,
 								perspective_matrices.at(cycle_position),
-								frame_feature);
+								frame_feature,
+								max_perspective_multiplier
+								);
 
 				    if (frame_counter > image_processing_threshold)	{
 					  // std::cout << "frame_feature m: " <<  frame_feature << std::endl;
@@ -317,7 +320,9 @@ int main(int argc, const char** argv) {
 								maximum_frame_threshold,
 								true,
 								perspective_matrices.at(cycle_position),
-								frame_feature);
+								frame_feature,
+								max_perspective_multiplier
+								);
 
 					cv::putText(frame, "Training Backgrounds.", cv::Point(150,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 					cv::putText(frame, addStr("Cycles left: ",training_cycles), cv::Point(150,130), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
