@@ -20,6 +20,8 @@
 
 	void drawPolygons(std::vector < std::vector<cv::Point> >& line_vector, cv::Mat canvas, cv::Scalar color);
 
+	bool getImageStream(std::string video_address, cv::VideoCapture& img_stream);
+
 // machine learning functions
 	bool checkTrainingStatus(int amount_of_cameras, int amount_of_training_coefficients);
 
@@ -118,7 +120,8 @@
 					bool training_only,
 					cv::Mat perspective_matrix,
 					double& frame_feature,
-					double max_perspective_multiplier
+					double max_perspective_multiplier,
+					int training_cycles
 					);
 
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);

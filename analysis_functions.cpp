@@ -21,7 +21,7 @@ void applyErosionParameters(cv::Mat& input_image, cv::Mat& output_image, int& pa
 
 }
 
-void applyDilationParameters(cv::Mat& input_image, cv::Mat& output_image, int& para) {
+void applyDilationParameters(cv::Mat& input_image, cv::Mat& output_image, int para) {
   cv::Mat element = cv::getStructuringElement( 2, cv::Size( 2*para + 1, 2*para+1 ),
 		                    cv::Point( para, para ) );
   cv::dilate(input_image, output_image, element);
@@ -75,12 +75,23 @@ void bgfgImage(cv::Mat& resized_frame,
 				bool training_only,
 				cv::Mat perspective_matrix,
 				double& frame_feature,
-				double max_perspective_multiplier
+				double max_perspective_multiplier,
+				int training_cycles
 				) {
 	cv::Mat img, background_image, edgemask, fgmask, fgmask1, fgmask2, fgmask3;
+	cv::Mat individual_blob = cv::Mat::zeros( resized_frame.size(), CV_8U);
+	cv::Mat combined_blobs  = cv::Mat::zeros( resized_frame.size(), CV_8U);
 	int threshold = 10;
+	int contour_size = 0;
+	int contour_size_threshold = 120;
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
+	int min_y = 10000;
+	int max_y = 0;
+	int max_x = 10000;
+	int min_x = 0;
+	int max_x_threshold = resized_frame.cols - 200;
+	int min_y_threshold = 70;
 
 	resized_frame.copyTo(img);
 
@@ -94,13 +105,15 @@ void bgfgImage(cv::Mat& resized_frame,
 		//std::cout << "saving background" << std::endl;
 		bg_model.getBackgroundImage(background_image);
 		cv::imwrite(addStr("data/backgrounds/background_",cycle_position,".png"),background_image);
+		if (training_only)
+			std::cout << "Training Backgrounds: Cycles left: " << training_cycles << " camera pos: " << cycle_position << std::endl;
 	}
 
 	if (frame_counter > 60 && !training_only) {
-		bg_model.getBackgroundImage(background_image);
+		// bg_model.getBackgroundImage(background_image);
 		// cv::imshow("BG", background_image);
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
-		// cv::imshow("FG", fgmask);
+		cv::imshow("FG", fgmask);
 		/* Apply erosion operation */
 		int parameter = 1;
 //		applyErosionParameters(fgmask, fgmask1, parameter);
@@ -108,68 +121,97 @@ void bgfgImage(cv::Mat& resized_frame,
 		/* Apply dilation operation */
 		parameter = 4;
 		applyDilationParameters(fgmask, fgmask2, parameter);
-		//  cv::createTrackbar( " Canny thresh:", "image", &thresh, max_thresh);
 		applyEdgeThreshold(img, edgemask, threshold);
-		// cv::imshow("Edges", edgemask);
+
+		// apply mask on edges and add to fgmask
 		cv::bitwise_and(fgmask2, edgemask, fgmask2);
-
-//		cv::add(fgmask1, fgmask2, fgmask3);
 		cv::add(fgmask, fgmask2, fgmask3);
-
-
-		// fill holes on the foreground mask
-//		parameter = 12;
-//		applyDilationParameters(fgmask3, fgmask3, parameter);
-//		parameter = 16;
-//		applyErosionParameters(fgmask3, fgmask3, parameter);
-
 		cv::threshold(fgmask3, fgmask3, 0, 255, 0);
-		// Find contours
+		cv::imshow("mask3",fgmask3);
+
+		// Find contours in the FGMASK3
 		contours.clear();
-		// cv::imshow( "fgmask3", fgmask3);
+		hierarchy.clear();
 		cv::findContours( fgmask3, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-
-		  // cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
-		  //  Draw contours
-		  frame_feature = 0;
-		  int tmpi = contours.size();
-		  for(int i = 0; i< tmpi; i++ )
-		  {
-			   int c_size = contours[i].size() ;
-			   if (c_size > 120)
-			   {
-				cv::Scalar color = cv::Scalar( 1, 0, 0);
-				cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
-				cv::drawContours( Individual_blob, contours, i, color, CV_FILLED, 8, hierarchy, 0, cv::Point() );
-				cv::Point low_p, temp;
-				low_p = contours[i][0];
-				for(int j = 1; j< c_size; j++)
-				{
-					temp = contours[i][j];
-					if (temp.y > low_p.y )   low_p = temp;
+		// Find the contours and draw them. We have to do this to make sure we do not count blobs double.
+		frame_feature = 0;
+		int tmpi = contours.size();
+		combined_blobs = cv::Scalar(0);
+		for(int i = 0; i< tmpi; i++ ) {
+			contour_size = contours[i].size() ;
+			if (contour_size > contour_size_threshold) {
+				// get lowest point
+				min_y = 10000;
+				max_y = 0;
+				max_x = 10000;
+				min_x = 0;
+				for(int j = 1; j < contour_size; j++) {
+					// get min max x
+					if (min_x > contours[i][j].x)
+						min_x = contours[i][j].x;
+					if (max_x < contours[i][j].x)
+						max_x = contours[i][j].x;
+					// get min max y
+					if (min_y > contours[i][j].y)
+						min_y = contours[i][j].y;
+					if (max_y < contours[i][j].y)
+						max_y = contours[i][j].y;
 				}
+				if (!(max_x-min_x >= max_x_threshold && max_y - min_y <= min_y_threshold))
+					cv::drawContours( combined_blobs, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+			}
+		}
 
-				// perspective correction
+		cv::imshow("img",img);
+		cv::imshow("combined_blobs",combined_blobs);
+		cv::waitKey(1);
+
+		// find the contours again.
+		contours.clear();
+		hierarchy.clear();
+		cv::findContours( combined_blobs, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+
+		tmpi = contours.size();
+		for(int i = 0; i< tmpi; i++ ) {
+			contour_size = contours[i].size();
+
+			cv::Point low_p;
+			low_p.y = contours[i][0].y;
+			for(int j = 1; j < contour_size; j++) {
+				if (contours[i][j].y > low_p.y )
+					low_p = contours[i][j];
+			}
+
+			if (max_x-min_x >= max_x_threshold && max_y - min_y <= min_y_threshold) {
+				// probably a horizontal line
+			}
+			else {
+				// correct for perspective based on lowest point
 				double perspective_para = 0;
 				cv::Point pp;
 				pp.x = low_p.x ;
-				for (int jj = low_p.y; jj < perspective_matrix.rows ;jj ++){
-					perspective_para = perspective_matrix.at<float>(jj, low_p.x);
+				for (int j = low_p.y; j < perspective_matrix.rows ;j++){
+					perspective_para = perspective_matrix.at<float>(j, low_p.x);
 					if (perspective_para > 0 )
 					{
-						pp.y = jj;
+						pp.y = j; // what does this do?
 						break;
 					}
-					pp.y = jj;
+					pp.y = j; // what does this do?
 				}
-			    cv::Scalar pre = sum(Individual_blob);
-				double feature =  pre.val[0] * pow(std::min(max_perspective_multiplier,perspective_para),2.0);
-				frame_feature = frame_feature + feature;
-			   }
-		  }
-		// cv::imshow( "Blob", Individual_blob);
+				/*
+				cv::Scalar pre = sum(individual_blob); // why the variablename pre?
+				double feature =  pre.val[0] * pow(perspective_para,2.0); // why define here?
+				frame_feature += feature;
+				*/
+				individual_blob = cv::Scalar(0);
+				cv::drawContours(individual_blob, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+				frame_feature += sum(individual_blob)[0] * pow(perspective_para,2.0);
+			}
+		}
 	}
+
 }
 
 bool checkIfBackgroundsExist(int amount_of_cameras) {

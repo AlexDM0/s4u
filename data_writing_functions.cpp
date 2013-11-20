@@ -18,13 +18,14 @@ void writeResults(double value, double std, int cycle_position) {
 	// this should write the data to a text file
 	time_t t = time(0);   // get time now
 	struct tm * now = localtime( & t );
+/*
 	std::cout << "Category: \t\tNumber of People" << std::endl;
 	std::cout << "Date: \t\t\t" << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << std::endl;
 	std::cout << "Number of People: \t" << value <<  std::endl;
 	std::cout << "Standard Dev.: \t\t" << std <<  std::endl;
 	std::cout << "Cycle Pos: \t\t" << cycle_position <<  std::endl;
 	std::cout << "Time: \t\t\t" << (now->tm_hour < 10 ? addStr("0",now->tm_hour) : toStr(now->tm_hour)) << ':' << (now->tm_min < 10 ? addStr("0",now->tm_min) : toStr(now->tm_min)) << ':' <<  (now->tm_sec < 10 ? addStr("0",now->tm_sec) : toStr(now->tm_sec)) << std::endl;
-
+*/
 	std::ofstream datafile;
 	datafile.open("output_data.txt");
 	datafile << "Category: \t\tNumber of People" << "\n";
