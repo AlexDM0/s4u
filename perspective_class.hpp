@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 class perspective {
 public:

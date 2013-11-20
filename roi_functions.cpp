@@ -12,6 +12,7 @@
 #include <windows.h> //profiling
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 const int XPOS_ON_BACKGROUND = 23;
 const int YPOS_ON_BACKGROUND = 106;

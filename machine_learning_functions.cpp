@@ -11,6 +11,7 @@
 #include <windows.h> //profiling
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 bool checkTrainingStatus(int amount_of_cameras, int amount_of_training_coefficients) {
 	return readCSV("data/machine_learning/system_trained_coefficients/coefficients.txt",amount_of_training_coefficients,amount_of_cameras);

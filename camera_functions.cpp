@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 void getCameraCycle(std::vector<int>& camera_cycle) {
 	camera_cycle.push_back(734);	// 0

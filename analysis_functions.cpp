@@ -11,6 +11,7 @@
 #include <windows.h>
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 void applyErosionParameters(cv::Mat& input_image, cv::Mat& output_image, int& para) {
   // erosion operation, erosion_type: MORPH_RECT = 0; MORPH_CROSS = 1; MORPH_ELLIPSE = 2;

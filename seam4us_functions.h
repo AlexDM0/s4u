@@ -1,3 +1,5 @@
+#pragma once
+
 //misc
 	bool readCSV(std::string filename, int x, int y);
 
@@ -8,20 +10,6 @@
 	bool readCSV(std::string filename, cv::Mat& content);
 
 	bool checkCSV(std::string filename);
-
-	std::string addStr(std::string a, std::string b, std::string c);
-
-	std::string addStr(std::string a, int b, std::string c);
-
-	std::string addStr(std::string a, int b);
-
-	std::string addStr(std::string a, double b, std::string c);
-
-	std::string addStr(std::string a, double b);
-
-	std::string addStr(std::string a, int b,std::string c, int d);
-
-	std::string addStr(std::string a, int b,std::string c, int d, std::string e);
 
 // image functions
 	int getPixelValue(cv::Mat& rgb_image, int x, int y, int channel);
@@ -136,7 +124,7 @@
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);
 
 // data writing functions
-	void writeResults(double value, int cycle_position);
+	void writeResults(double value, double std, int cycle_position);
 
 	void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients);
 

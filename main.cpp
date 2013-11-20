@@ -30,6 +30,7 @@ int main()
 #include <windows.h> //profiling
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 bool setup(
 			bool& setup_ROI,
@@ -92,11 +93,15 @@ bool setup(
 }
 
 bool getImageStream(cv::VideoCapture& img_stream) {
-	img_stream.open("C:/Data from server/Thursday (03-10-2013)(08.28-09.39).mp4");
+	img_stream.open("C:/Data from server/Friday 5-7 1.mp4");
 	return img_stream.isOpened();
 }
 
 int main(int argc, const char** argv) {
+
+	writeResults(-1,0,2);
+	return -1;
+
 	// connect to video stream
 	std::cout << "Opening video stream... ";
 	cv::VideoCapture img_stream;
@@ -161,13 +166,14 @@ int main(int argc, const char** argv) {
 	int amount_of_training_cycles_from_nothing = 10;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
-	int amount_of_training_coefficients = 3;
+	int amount_of_training_coefficients = 5;
 	double frame_feature = 0;
 	double sum_feature = 0;
 	double max_perspective_multiplier = 5;
+
 	// save results in file
 	std::ofstream Counting_file;
-	Counting_file.open("thursday_People_counting.txt");
+	Counting_file.open("friday_1_People_counting.txt");
 	int sample_frame = 1 ;
 
 	// check if the system is Trained (features-to-people).
@@ -217,7 +223,7 @@ int main(int argc, const char** argv) {
 				amount_of_camera_switches += 1;
 
 			if (offline_camera_switched) {
-				writeResults(-1.0,cycle_position);
+				writeResults(-1.0,0,cycle_position);
 				offline_camera_switched = false;
 			}
 			// Set expectation

@@ -11,6 +11,7 @@
 #include <windows.h> //profiling
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 bool readCSV(std::string filename, int x_ref, int y_ref) {
 	std::ifstream datafile(filename.c_str());
@@ -136,59 +137,3 @@ bool checkCSV(std::string filename) {
 	}
 }
 
-
-std::string addStr(std::string a, std::string b, std::string c) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, double b, std::string c) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, int b, std::string c) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, int b) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, double b) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, int b,std::string c, int d) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c << d;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, double b,std::string c, double d) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c << d;
-	return concatenatedStr.str();
-}
-
-std::string addStr(std::string a, int b,std::string c, int d, std::string e) {
-	std::stringstream concatenatedStr;
-	concatenatedStr.str("");
-	concatenatedStr << a << b << c << d << e;
-	return concatenatedStr.str();
-}

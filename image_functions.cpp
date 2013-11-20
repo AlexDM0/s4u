@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 int getPixelValue(cv::Mat& rgb_image, int x, int y, int channel) {
 	// channel: 0 = r, 1 = g, 2 = b

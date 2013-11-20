@@ -11,6 +11,7 @@
 #include <windows.h> //profiling
 
 #include <seam4us_functions.h>
+#include <template_functions.hpp>
 
 int identifyNumber(cv::KNearest& OCR, cv::Mat& number) {
 	int image_rows = 30;
