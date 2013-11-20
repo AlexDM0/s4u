@@ -219,6 +219,7 @@ int main(int argc, const char** argv) {
 				amount_of_camera_switches += 1;
 
 			if (offline_camera_switched) {
+				//std::cout << "WRITING OFFLINE DATA"  << std::endl;
 				writeResults(-1.0,0,cycle_position);
 				offline_camera_switched = false;
 			}
@@ -342,8 +343,8 @@ int main(int argc, const char** argv) {
 
 
 		if (!setup_ROI && !setup_perspective) {
-			// cv::imshow("feed", frame);
-			// key = cv::waitKey(1);
+			//cv::imshow("feed", frame);
+			//key = cv::waitKey(1);
 		}
 
 		if (key == 112) { // p -- open perspective editor

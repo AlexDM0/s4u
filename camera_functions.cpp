@@ -95,9 +95,10 @@ bool isCameraSwitching(int& frame_counter,
 		if (isCameraOffline(frame))
 			previous_camera_offline = true;
 		else {
-			if (previous_camera_offline)
+			if (previous_camera_offline) {
 				camera_switched = true;
-			offline_camera_switched = true;
+				offline_camera_switched = true;
+			}
 			previous_camera_offline = false;
 		}
 
