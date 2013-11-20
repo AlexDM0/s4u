@@ -98,10 +98,6 @@ bool getImageStream(cv::VideoCapture& img_stream) {
 }
 
 int main(int argc, const char** argv) {
-
-	writeResults(-1,0,2);
-	return -1;
-
 	// connect to video stream
 	std::cout << "Opening video stream... ";
 	cv::VideoCapture img_stream;
