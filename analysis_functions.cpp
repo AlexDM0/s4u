@@ -90,8 +90,7 @@ void bgfgImage(cv::Mat& resized_frame,
 	int max_y = 0;
 	int max_x = 10000;
 	int min_x = 0;
-	int max_x_threshold = resized_frame.cols - 200;
-	int min_y_threshold = 70;
+	int blob_xy_ratio_threshold = 5;
 
 	resized_frame.copyTo(img);
 
@@ -158,7 +157,7 @@ void bgfgImage(cv::Mat& resized_frame,
 					if (max_y < contours[i][j].y)
 						max_y = contours[i][j].y;
 				}
-				if (!(max_x-min_x >= max_x_threshold && max_y - min_y <= min_y_threshold))
+				if ((max_x - min_x)/(max_y - min_y) < blob_xy_ratio_threshold)
 					cv::drawContours( combined_blobs, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
 			}
 		}
@@ -183,32 +182,27 @@ void bgfgImage(cv::Mat& resized_frame,
 					low_p = contours[i][j];
 			}
 
-			if (max_x-min_x >= max_x_threshold && max_y - min_y <= min_y_threshold) {
-				// probably a horizontal line
-			}
-			else {
-				// correct for perspective based on lowest point
-				double perspective_para = 0;
-				cv::Point pp;
-				pp.x = low_p.x ;
-				for (int j = low_p.y; j < perspective_matrix.rows ;j++){
-					perspective_para = perspective_matrix.at<float>(j, low_p.x);
-					if (perspective_para > 0 )
-					{
-						pp.y = j; // what does this do?
-						break;
-					}
+			// correct for perspective based on lowest point
+			double perspective_para = 0;
+			cv::Point pp;
+			pp.x = low_p.x ;
+			for (int j = low_p.y; j < perspective_matrix.rows ;j++){
+				perspective_para = perspective_matrix.at<float>(j, low_p.x);
+				if (perspective_para > 0 )
+				{
 					pp.y = j; // what does this do?
+					break;
 				}
-				/*
-				cv::Scalar pre = sum(individual_blob); // why the variablename pre?
-				double feature =  pre.val[0] * pow(perspective_para,2.0); // why define here?
-				frame_feature += feature;
-				*/
-				individual_blob = cv::Scalar(0);
-				cv::drawContours(individual_blob, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
-				frame_feature += sum(individual_blob)[0] * pow(perspective_para,2.0);
+				pp.y = j; // what does this do?
 			}
+			/*
+			cv::Scalar pre = sum(individual_blob); // why the variablename pre?
+			double feature =  pre.val[0] * pow(perspective_para,2.0); // why define here?
+			frame_feature += feature;
+			*/
+			individual_blob = cv::Scalar(0);
+			cv::drawContours(individual_blob, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+			frame_feature += sum(individual_blob)[0] * pow(perspective_para,2.0);
 		}
 	}
 
