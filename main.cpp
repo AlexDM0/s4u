@@ -93,7 +93,7 @@ bool setup(
 }
 
 int main(int argc, const char** argv) {
-	std::string video_address = "C:/Data from server/Tuesday (24-09-2013)(19.03-20.00).mp4";
+	std::string video_address = "C:/Data from server/Tuesday(24-09-2013).mp4";
 
 	// connect to video stream
 	std::cout << "Opening video stream at: \n" << video_address;
@@ -248,7 +248,7 @@ int main(int argc, const char** argv) {
 		//	break;
 
 		if (start_analysis && initialization_complete && frame_counter < maximum_frame_threshold) {
-			if (!setup_ROI && !setup_perspective)
+			if (!setup_ROI && !setup_perspective && scale_factor != 1)
 				cv::resize(frame, resized_frame, cv::Size(scale_factor*frame.cols, scale_factor*frame.rows));
 			else
 				frame.copyTo(resized_frame);
