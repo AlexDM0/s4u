@@ -130,45 +130,44 @@ void bgfgImage(cv::Mat& resized_frame,
 		cv::findContours( fgmask3, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
 
-		  // cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
-		  //  Draw contours
-		  frame_feature = 0;
-		  int tmpi = contours.size();
-		  for(int i = 0; i< tmpi; i++ )
-		  {
-			   int c_size = contours[i].size() ;
-			   if (c_size > 120)
-			   {
-				cv::Scalar color = cv::Scalar( 1, 0, 0);
-				cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
-				cv::drawContours( Individual_blob, contours, i, color, CV_FILLED, 8, hierarchy, 0, cv::Point() );
-				cv::Point low_p, temp;
-				low_p = contours[i][0];
-				for(int j = 1; j< c_size; j++)
-				{
-					temp = contours[i][j];
-					if (temp.y > low_p.y )   low_p = temp;
-				}
+		// cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
+		//  Draw contours
+		frame_feature = 0;
+		int tmpi = contours.size();
+		for(int i = 0; i< tmpi; i++ )
+		{
+		   int c_size = contours[i].size() ;
+		   if (c_size > 120)
+		   {
+			cv::Scalar color = cv::Scalar( 1, 0, 0);
+			cv::Mat Individual_blob = cv::Mat::zeros( fgmask3.size(), CV_64FC1);
+			cv::drawContours( Individual_blob, contours, i, color, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+			cv::Point low_p, temp;
+			low_p = contours[i][0];
+			for(int j = 1; j< c_size; j++)
+			{
+				temp = contours[i][j];
+				if (temp.y > low_p.y )   low_p = temp;
+			}
 
-				// perspective correction
-				double perspective_para = 0;
-				cv::Point pp;
-				pp.x = low_p.x ;
-				for (int jj = low_p.y; jj < perspective_matrix.rows ;jj ++){
-					perspective_para = perspective_matrix.at<float>(jj, low_p.x);
-					if (perspective_para > 0 )
-					{
-						pp.y = jj;
-						break;
-					}
+			// perspective correction
+			double perspective_para = 0;
+			cv::Point pp;
+			pp.x = low_p.x ;
+			for (int jj = low_p.y; jj < perspective_matrix.rows ;jj ++){
+				perspective_para = perspective_matrix.at<float>(jj, low_p.x);
+				if (perspective_para > 0 )
+				{
 					pp.y = jj;
+					break;
 				}
-			    cv::Scalar pre = sum(Individual_blob);
-				double feature =  pre.val[0] * pow(std::min(max_perspective_multiplier,perspective_para),2.0);
-				frame_feature = frame_feature + feature;
-			   }
-		  }
-		// cv::imshow( "Blob", Individual_blob);
+				pp.y = jj;
+			}
+			cv::Scalar pre = sum(Individual_blob);
+			double feature =  pre.val[0] * pow(std::min(max_perspective_multiplier,perspective_para),2.0);
+			frame_feature = frame_feature + feature;
+		   }
+		}
 	}
 }
 
