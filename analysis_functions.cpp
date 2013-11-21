@@ -12,6 +12,7 @@
 
 #include <seam4us_functions.h>
 #include <template_functions.hpp>
+#include <profiling_class.hpp>
 
 void applyErosionParameters(cv::Mat& input_image, cv::Mat& output_image, int& para) {
   // erosion operation, erosion_type: MORPH_RECT = 0; MORPH_CROSS = 1; MORPH_ELLIPSE = 2;
@@ -78,12 +79,20 @@ void bgfgImage(cv::Mat& resized_frame,
 	int number_of_contours;
 	double perspective_multiplier = 0;
 	cv::Point lowest_point;
-	std::vector<cv::Point> lowest_point_vector;
 
 	resized_frame.copyTo(img);
 
+	profiler timer(false);
+
+	timer.start("blur");
+
 	// blur the color image
 	cv::GaussianBlur(img, img, cv::Size(9,9), 1.5, 1.5);
+//	cv::medianBlur(img,img,5);
+//	cv::medianBlur(img,img,5);
+
+	timer.end();
+
 
 	// background subtraction -- this trains the background
 	bg_model(img, fgmask, learning_rate);
@@ -96,10 +105,7 @@ void bgfgImage(cv::Mat& resized_frame,
 	}
 
 	if (frame_counter > 60 && !training_only) {
-		// bg_model.getBackgroundImage(background_image);
-		// cv::imshow("BG", background_image);
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
-		cv::imshow("FG", fgmask);
 
 		/* Apply dilation operation */
 		parameter = 4;
@@ -116,18 +122,14 @@ void bgfgImage(cv::Mat& resized_frame,
 		applyDilationParameters(fgmask3, fgmask3, parameter);
 		applyErosionParameters(fgmask3, fgmask3, parameter);
 
-		cv::imshow("mask3",fgmask3);
-
 		// Find contours in the FGMASK3
 		contours.clear();
 		hierarchy.clear();
 		cv::findContours( fgmask3, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
 		// Find the contours and draw them. We have to do this to make sure we do not count blobs double.
-		frame_feature = 0;
 		number_of_contours = contours.size();
 		combined_blobs = cv::Scalar(0);
-		lowest_point_vector.clear();
 		for(int i = 0; i < number_of_contours; i++ ) {
 			contour_size = contours[i].size() ;
 			if (contour_size > contour_size_threshold) {
@@ -148,38 +150,47 @@ void bgfgImage(cv::Mat& resized_frame,
 						min_y = contours[i][j].y;
 					if (max_y < contours[i][j].y)
 						max_y = contours[i][j].y;
-
-					// get the lowest point
-					if (contours[i][j].y > lowest_point.y )
-						lowest_point = contours[i][j];
 				}
-				std::cout << "x/y: "<< (max_x - min_x)/(max_y - min_y) << std::endl;
-				if ((max_x - min_x)/(max_y - min_y) < blob_xy_ratio_threshold) {
+				if ((max_x - min_x)/(max_y - min_y) < blob_xy_ratio_threshold)
 					cv::drawContours( combined_blobs, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
-					lowest_point_vector.push_back(lowest_point);
-				}
 			}
 		}
 
-		cv::imshow("img",img);
-		cv::imshow("combined_blobs",combined_blobs);
-		cv::waitKey(1);
+		/*Debug code for viewing process*/
+		//bg_model.getBackgroundImage(background_image);
+		//cv::imshow("BG", background_image);
+//		cv::imshow("FG", fgmask);
+//		cv::imshow("edges",edgemask);
+//		cv::imshow("mask3",fgmask3);
+//		cv::imshow("img",img);
+//		cv::imshow("combined_blobs",combined_blobs);
+//		cv::waitKey(1);
 
 		// find the contours again.
 		contours.clear();
 		hierarchy.clear();
 		cv::findContours( combined_blobs, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
+		frame_feature = 0;
 		number_of_contours = contours.size();
 		for(int i = 0; i < number_of_contours; i++ ) {
+			// get the lowest point
+			lowest_point.y = contours[i][0].y;
+			for(int j = 1; j < contour_size; j++) {
+				if (contours[i][j].y > lowest_point.y )
+					lowest_point = contours[i][j];
+			}
+
 			// correct for perspective based on lowest point
 			for (int j = lowest_point.y; j < perspective_matrix.rows ;j++){
-				perspective_multiplier = perspective_matrix.at<float>(j, lowest_point_vector[i].x);
+				perspective_multiplier = perspective_matrix.at<float>(j, lowest_point.x);
 				if (perspective_multiplier > 0 )
 					break;
 			}
+
+			// get the features
 			individual_blob = cv::Scalar(0);
-			cv::drawContours(individual_blob, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+			cv::drawContours(individual_blob, contours, i, 1, CV_FILLED, 8, hierarchy, 0, cv::Point() );
 			frame_feature += sum(individual_blob)[0] * pow(perspective_multiplier,2.0);
 		}
 	}
@@ -201,7 +212,6 @@ int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_
 							int amount_of_training_cycles,
 							int amount_of_training_cycles_from_nothing) {
 	bool backgrounds_available = checkIfBackgroundsExist((int)background_model_vector.size());
-
 	// define settings for all models
 	for (int i = 0; i < (int)background_model_vector.size(); i++){
 		background_model_vector.at(i).set ("varThreshold", 16);
