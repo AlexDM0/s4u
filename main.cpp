@@ -92,20 +92,17 @@ bool setup(
 	return true;
 }
 
-bool getImageStream(cv::VideoCapture& img_stream) {
-	img_stream.open("C:/Data from server/Friday 5-7 1.mp4");
-	return img_stream.isOpened();
-}
-
 int main(int argc, const char** argv) {
+	std::string video_address = "C:/Data from server/Tuesday (24-09-2013)(19.03-20.00).mp4";
+
 	// connect to video stream
-	std::cout << "Opening video stream... ";
+	std::cout << "Opening video stream at: \n" << video_address;
 	cv::VideoCapture img_stream;
-	if (!getImageStream(img_stream)) {
+	if (!getImageStream(video_address,img_stream)) {
 		std::cout << "Could not open video feed." << std::endl;
 		return -1;
 	}
-	std::cout << "Done." << std::endl;
+	std::cout << "\n Done.\n" << std::endl;
 
 	// get the camera cycle vector
 	std::vector<int> camera_cycle;
@@ -138,7 +135,7 @@ int main(int argc, const char** argv) {
 		std::cout << "Done." << std::endl;
 
 	// initialize the variables
-	cv::Mat frame, resized_frame, gray, gray_previous, gray_difference, foreground_mask;
+	cv::Mat frame, resized_frame, gray, gray_previous, gray_difference, foreground_mask, test;
 	std::vector<cv::Mat> backgrounds, ROI_masks, perspective_matrices;
 	std::vector<cv::Mat> camera_frames (amount_of_cameras);
 	std::vector<std::vector<cv::Mat> > camera_clips (amount_of_cameras);
@@ -155,11 +152,12 @@ int main(int argc, const char** argv) {
 	bool roi_masks_created = false;			bool perspective_matrices_loaded = false;	bool offline_camera_switched = false;
 
 	// initialize and set configuration variables
+	int minimum_amount_of_switches = 10;
 	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = 0;
-	int amount_of_training_cycles_from_nothing = 10;
+	int amount_of_training_cycles = 60;
+	int amount_of_training_cycles_from_nothing = 20;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
@@ -201,7 +199,7 @@ int main(int argc, const char** argv) {
 		// if the frame is empty, close the program.
 		if(frame.empty()) {
 			Counting_file.close();
-			std::cout << "No frame is available. Closing program." << std::endl;
+			std::cout << "No more frames available. Closing program." << std::endl;
 			cv::waitKey(0);
 			break;
 		}
@@ -215,11 +213,10 @@ int main(int argc, const char** argv) {
 			successful_ocr = 0;
 			failed_ocr = 0;
 			start_analysis = false;
-			if (amount_of_camera_switches < 10)
+			if (amount_of_camera_switches < 100)
 				amount_of_camera_switches += 1;
 
 			if (offline_camera_switched) {
-				//std::cout << "WRITING OFFLINE DATA"  << std::endl;
 				writeResults(-1.0,0,cycle_position);
 				offline_camera_switched = false;
 			}
@@ -244,7 +241,7 @@ int main(int argc, const char** argv) {
 													failed_ocr,
 													number_of_deviations
 													);
-			if (number_of_deviations == 0 && start_analysis && amount_of_camera_switches > 5)
+			if (number_of_deviations == 0 && start_analysis && amount_of_camera_switches > minimum_amount_of_switches)
 				initialization_complete = true;
 		}
 		//if (!handlePerspectivesDebug(setup_perspective, camera_clips, frame, cycle_position, amount_of_cameras, save_frame))
@@ -272,7 +269,6 @@ int main(int argc, const char** argv) {
 						camera_clips
 					))
 				break;
-
 			if (!setup_ROI && !setup_perspective) {
 				// counting the cycle position
 				if (((cycle_position + 1) == amount_of_cameras) && (previous_cycle_position != cycle_position)){
@@ -282,8 +278,7 @@ int main(int argc, const char** argv) {
 				}
 
 				// once the backgrounds are trained, start the processing
-				// if (training_cycles <= 0) {
-				if (1) {
+				if (training_cycles <= 0) {
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
 								frame_counter,
@@ -295,7 +290,8 @@ int main(int argc, const char** argv) {
 								false,
 								perspective_matrices.at(cycle_position),
 								frame_feature,
-								max_perspective_multiplier
+								max_perspective_multiplier,
+								training_cycles
 								);
 
 				    if (frame_counter > image_processing_threshold)	{
@@ -304,10 +300,12 @@ int main(int argc, const char** argv) {
 
 					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
+				    	cv::waitKey(0);
 				    	sum_feature = sum_feature/averaging_frames;
-				    	std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
+				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
+				    	//std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
 				    	//if (sum_feature==0)  cv::waitKey(0);
-				    	Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
+				    	//Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
 				    	sum_feature = 0;
 				    	sample_frame++;
 				    }
@@ -324,11 +322,11 @@ int main(int argc, const char** argv) {
 								true,
 								perspective_matrices.at(cycle_position),
 								frame_feature,
-								max_perspective_multiplier
+								max_perspective_multiplier,
+								training_cycles
 								);
-
-					cv::putText(frame, "Training Backgrounds.", cv::Point(150,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
-					cv::putText(frame, addStr("Cycles left: ",training_cycles), cv::Point(150,130), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
+//					cv::putText(frame, "Training Backgrounds.", cv::Point(150,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
+//					cv::putText(frame, addStr("Cycles left: ",training_cycles), cv::Point(150,130), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 				}
 
 				// updating the cycle position
@@ -341,11 +339,12 @@ int main(int argc, const char** argv) {
 			cv::putText(frame, "Initializing System.", cv::Point(200,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 		}
 
-
+		/*
 		if (!setup_ROI && !setup_perspective) {
-			//cv::imshow("feed", frame);
-			//key = cv::waitKey(1);
+			cv::imshow("feed", frame);
+			key = cv::waitKey(1);
 		}
+		*/
 
 		if (key == 112) { // p -- open perspective editor
 			setup_perspective = true;
