@@ -72,6 +72,7 @@ bool setup(
 		roi_masks_created = true;
 	}
 
+	// applying ROI mask to the frame
 	if (!setup_ROI)
 		applyROImaskToFrame(resized_frame,ROI_masks,cycle_position);
 
@@ -96,7 +97,7 @@ bool setup(
 }
 
 int main(int argc, const char** argv) {
-	std::string video_address = "C:/Data from server/Tuesday(24-09-2013).mp4";
+	std::string video_address = "C:/Data from server/saturday.mp4";
 
 	// connect to video stream
 	std::cout << "Opening video stream at: \n" << video_address;
@@ -106,7 +107,7 @@ int main(int argc, const char** argv) {
 		return -1;
 	}
 	std::cout << "\n Done.\n" << std::endl;
-  // hello world
+
 	// get the camera cycle vector
 	std::vector<int> camera_cycle;
 	getCameraCycle(camera_cycle);
@@ -160,7 +161,7 @@ int main(int argc, const char** argv) {
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
 	int amount_of_training_cycles = 60;
-	int amount_of_training_cycles_from_nothing = 1;
+	int amount_of_training_cycles_from_nothing = 0;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
@@ -271,6 +272,7 @@ int main(int argc, const char** argv) {
 					))
 				break;
 
+			// start the processing of the video data
 			if (!setup_ROI && !setup_perspective) {
 				// counting the cycle position
 				if (((cycle_position + 1) == amount_of_cameras) && (previous_cycle_position != cycle_position)){
@@ -279,12 +281,12 @@ int main(int argc, const char** argv) {
 						training_cycles -= 1;
 				}
 
-
 				// once the backgrounds are trained, start the processing
 				if (training_cycles <= 0) {
 					timer.start("processing and background function");
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
+								ROI_masks,
 								frame_counter,
 								cycle_position,
 								scale_factor,
@@ -304,18 +306,24 @@ int main(int argc, const char** argv) {
 
 				    if (frame_counter == image_processing_threshold + averaging_frames){
 				    	sum_feature = sum_feature/averaging_frames;
+
+				    	// write the framedata to disk
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
+
 				    	std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
-				    	Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
+
+				    	// write it to a file for labelling
+				    	//Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
+				    	//cv::imwrite(addStr("data/samples/",sample_frame,".png"),resized_frame);
+
 				    	sum_feature = 0;
 				    	sample_frame++;
 				    }
 				}
 				else { // this only trains the background
-
-
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
+								ROI_masks,
 								frame_counter,
 								cycle_position,
 								scale_factor,

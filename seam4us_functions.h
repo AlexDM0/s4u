@@ -111,6 +111,7 @@
 	void bgfgImage(
 					cv::Mat& resized_frame,
 					cv::BackgroundSubtractorMOG2& bg_model,
+					std::vector<cv::Mat>& ROI_masks,
 					int frame_counter,
 					int cycle_position,
 					double scale_factor,
