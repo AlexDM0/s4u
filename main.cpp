@@ -299,6 +299,7 @@ int main(int argc, const char** argv) {
 
 					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
+				    	cv::waitKey(0);
 				    	sum_feature = sum_feature/averaging_frames;
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
 				    	//std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
