@@ -31,6 +31,9 @@ int main()
 
 #include <seam4us_functions.h>
 #include <template_functions.hpp>
+#include <profiling_class.hpp>
+
+bool ENABLE_PROFILER = false;
 
 bool setup(
 			bool& setup_ROI,
@@ -156,14 +159,15 @@ int main(int argc, const char** argv) {
 	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = 65;
-	int amount_of_training_cycles_from_nothing = 65;
+	int amount_of_training_cycles = 60;
+	int amount_of_training_cycles_from_nothing = 1;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
 	double frame_feature = 0;
 	double sum_feature = 0;
 	double max_perspective_multiplier = 5;
+	profiler timer(ENABLE_PROFILER);
 
 	// save results in file
 	std::ofstream Counting_file;
@@ -200,7 +204,6 @@ int main(int argc, const char** argv) {
 		if(frame.empty()) {
 			Counting_file.close();
 			std::cout << "No more frames available. Closing program." << std::endl;
-			cv::waitKey(0);
 			break;
 		}
 
@@ -244,8 +247,6 @@ int main(int argc, const char** argv) {
 			if (number_of_deviations == 0 && start_analysis && amount_of_camera_switches > minimum_amount_of_switches)
 				initialization_complete = true;
 		}
-		//if (!handlePerspectivesDebug(setup_perspective, camera_clips, frame, cycle_position, amount_of_cameras, save_frame))
-		//	break;
 
 		if (start_analysis && initialization_complete && frame_counter < maximum_frame_threshold) {
 			if (!setup_ROI && !setup_perspective)
@@ -269,6 +270,7 @@ int main(int argc, const char** argv) {
 						camera_clips
 					))
 				break;
+
 			if (!setup_ROI && !setup_perspective) {
 				// counting the cycle position
 				if (((cycle_position + 1) == amount_of_cameras) && (previous_cycle_position != cycle_position)){
@@ -277,8 +279,10 @@ int main(int argc, const char** argv) {
 						training_cycles -= 1;
 				}
 
+
 				// once the backgrounds are trained, start the processing
 				if (training_cycles <= 0) {
+					timer.start("processing and background function");
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
 								frame_counter,
@@ -293,25 +297,23 @@ int main(int argc, const char** argv) {
 								max_perspective_multiplier,
 								training_cycles
 								);
+					timer.end();
 
-				    if (frame_counter > image_processing_threshold)	{
-					  // std::cout << "frame_feature m: " <<  frame_feature << std::endl;
-					  sum_feature  = sum_feature + frame_feature;
+				    if (frame_counter > image_processing_threshold)
+						sum_feature  = sum_feature + frame_feature;
 
-					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
-				    	// this is to check the final frames one by one
-				    	cv::waitKey(0);
 				    	sum_feature = sum_feature/averaging_frames;
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
-				    	//std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
-				    	//if (sum_feature==0)  cv::waitKey(0);
-				    	//Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
+				    	std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
+				    	Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
 				    	sum_feature = 0;
 				    	sample_frame++;
 				    }
 				}
 				else { // this only trains the background
+
+
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
 								frame_counter,
@@ -333,19 +335,19 @@ int main(int argc, const char** argv) {
 				// updating the cycle position
 				previous_cycle_position = cycle_position;
 			}
-			cv::putText(frame, addStr("camID: ", camera_cycle[cycle_position], " pos: ",cycle_position), cv::Point(200,60), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0,0,255));
+			//cv::putText(frame, addStr("camID: ", camera_cycle[cycle_position], " pos: ",cycle_position), cv::Point(200,60), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0,0,255));
 		}
 		else if (start_analysis) {
 			// intermediate step while the position within the cycle is being determined
-			cv::putText(frame, "Initializing System.", cv::Point(200,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
+			//cv::putText(frame, "Initializing System.", cv::Point(200,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 		}
 
-		/*
-		if (!setup_ROI && !setup_perspective) {
-			cv::imshow("feed", frame);
-			key = cv::waitKey(1);
-		}
-		*/
+
+//		if (!setup_ROI && !setup_perspective) {
+//			cv::imshow("feed", frame);
+//			key = cv::waitKey(1);
+//		}
+
 
 		if (key == 112) { // p -- open perspective editor
 			setup_perspective = true;
