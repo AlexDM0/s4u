@@ -156,8 +156,8 @@ int main(int argc, const char** argv) {
 	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = 60;
-	int amount_of_training_cycles_from_nothing = 20;
+	int amount_of_training_cycles = 65;
+	int amount_of_training_cycles_from_nothing = 65;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
@@ -300,6 +300,7 @@ int main(int argc, const char** argv) {
 
 					}
 				    if (frame_counter == image_processing_threshold + averaging_frames){
+				    	// this is to check the final frames one by one
 				    	cv::waitKey(0);
 				    	sum_feature = sum_feature/averaging_frames;
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
