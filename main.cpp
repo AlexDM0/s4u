@@ -152,11 +152,12 @@ int main(int argc, const char** argv) {
 	bool roi_masks_created = false;			bool perspective_matrices_loaded = false;	bool offline_camera_switched = false;
 
 	// initialize and set configuration variables
+	int minimum_amount_of_switches = 10;
 	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = -5;
-	int amount_of_training_cycles_from_nothing = 10;
+	int amount_of_training_cycles = 60;
+	int amount_of_training_cycles_from_nothing = 20;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
@@ -212,7 +213,7 @@ int main(int argc, const char** argv) {
 			successful_ocr = 0;
 			failed_ocr = 0;
 			start_analysis = false;
-			if (amount_of_camera_switches < 10)
+			if (amount_of_camera_switches < 100)
 				amount_of_camera_switches += 1;
 
 			if (offline_camera_switched) {
@@ -240,7 +241,7 @@ int main(int argc, const char** argv) {
 													failed_ocr,
 													number_of_deviations
 													);
-			if (number_of_deviations == 0 && start_analysis && amount_of_camera_switches > 5)
+			if (number_of_deviations == 0 && start_analysis && amount_of_camera_switches > minimum_amount_of_switches)
 				initialization_complete = true;
 		}
 		//if (!handlePerspectivesDebug(setup_perspective, camera_clips, frame, cycle_position, amount_of_cameras, save_frame))

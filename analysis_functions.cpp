@@ -28,7 +28,6 @@ void applyDilationParameters(cv::Mat& input_image, cv::Mat& output_image, int pa
 }
 
 void applyEdgeThreshold(cv::Mat img, cv::Mat& edgemask, int& threshold) {
-  cv::RNG rng(12345);
   cv::Mat img_b, img_g, img_r;
   std::vector<std::vector<cv::Point> > contours;
   std::vector<cv::Vec4i> hierarchy;
@@ -44,22 +43,6 @@ void applyEdgeThreshold(cv::Mat img, cv::Mat& edgemask, int& threshold) {
   cv::add(img_b, img_g, img_g);
   cv::add(img_g, img_r, edgemask);
 
-  /// Find contours
-//   cv::findContours( edgemask, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0,0));
-
-  /// Draw contours
-//  cv::Mat drawing = cv::Mat::zeros( edgemask.size(), CV_8UC3 );
-//  for( int i = 0; i< contours.size(); i++ )
-//     {
-//       cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-//       cv::drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point() );
-//     }
-
-  /// Show in a window
-//  cv::namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-//  cv::imshow( "Contours", drawing );
-//  cv::imshow("edges", edgemask);
-//  cv::waitKey(0);
 }
 
 
@@ -91,6 +74,11 @@ void bgfgImage(cv::Mat& resized_frame,
 	int min_x = 10000;
 	int max_x = 0;
 	int blob_xy_ratio_threshold = 5;
+	int parameter;
+	int number_of_contours;
+	double perspective_multiplier = 0;
+	cv::Point lowest_point;
+	std::vector<cv::Point> lowest_point_vector;
 
 	resized_frame.copyTo(img);
 
@@ -101,7 +89,6 @@ void bgfgImage(cv::Mat& resized_frame,
 	bg_model(img, fgmask, learning_rate);
 
 	if (frame_counter == maximum_frame_threshold - 1) {
-		//std::cout << "saving background" << std::endl;
 		bg_model.getBackgroundImage(background_image);
 		cv::imwrite(addStr("data/backgrounds/background_",cycle_position,".png"),background_image);
 		if (training_only)
@@ -113,19 +100,22 @@ void bgfgImage(cv::Mat& resized_frame,
 		// cv::imshow("BG", background_image);
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
 		cv::imshow("FG", fgmask);
-		/* Apply erosion operation */
-		int parameter = 1;
-//		applyErosionParameters(fgmask, fgmask1, parameter);
 
 		/* Apply dilation operation */
 		parameter = 4;
 		applyDilationParameters(fgmask, fgmask2, parameter);
 		applyEdgeThreshold(img, edgemask, threshold);
 
+
 		// apply mask on edges and add to fgmask
 		cv::bitwise_and(fgmask2, edgemask, fgmask2);
 		cv::add(fgmask, fgmask2, fgmask3);
 		cv::threshold(fgmask3, fgmask3, 0, 255, 0);
+
+		parameter = 2;
+		applyDilationParameters(fgmask3, fgmask3, parameter);
+		applyErosionParameters(fgmask3, fgmask3, parameter);
+
 		cv::imshow("mask3",fgmask3);
 
 		// Find contours in the FGMASK3
@@ -135,9 +125,10 @@ void bgfgImage(cv::Mat& resized_frame,
 
 		// Find the contours and draw them. We have to do this to make sure we do not count blobs double.
 		frame_feature = 0;
-		int tmpi = contours.size();
+		number_of_contours = contours.size();
 		combined_blobs = cv::Scalar(0);
-		for(int i = 0; i< tmpi; i++ ) {
+		lowest_point_vector.clear();
+		for(int i = 0; i < number_of_contours; i++ ) {
 			contour_size = contours[i].size() ;
 			if (contour_size > contour_size_threshold) {
 				// get lowest point
@@ -145,6 +136,7 @@ void bgfgImage(cv::Mat& resized_frame,
 				max_y = 0;
 				min_x = 100000;
 				max_x = 0;
+				lowest_point.y = contours[i][0].y;
 				for(int j = 1; j < contour_size; j++) {
 					// get min max x
 					if (min_x > contours[i][j].x)
@@ -156,10 +148,16 @@ void bgfgImage(cv::Mat& resized_frame,
 						min_y = contours[i][j].y;
 					if (max_y < contours[i][j].y)
 						max_y = contours[i][j].y;
+
+					// get the lowest point
+					if (contours[i][j].y > lowest_point.y )
+						lowest_point = contours[i][j];
 				}
 				std::cout << "x/y: "<< (max_x - min_x)/(max_y - min_y) << std::endl;
-				if ((max_x - min_x)/(max_y - min_y) < blob_xy_ratio_threshold)
+				if ((max_x - min_x)/(max_y - min_y) < blob_xy_ratio_threshold) {
 					cv::drawContours( combined_blobs, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
+					lowest_point_vector.push_back(lowest_point);
+				}
 			}
 		}
 
@@ -172,27 +170,17 @@ void bgfgImage(cv::Mat& resized_frame,
 		hierarchy.clear();
 		cv::findContours( combined_blobs, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-		tmpi = contours.size();
-		for(int i = 0; i< tmpi; i++ ) {
-			contour_size = contours[i].size();
-
-			cv::Point low_p;
-			low_p.y = contours[i][0].y;
-			for(int j = 1; j < contour_size; j++) {
-				if (contours[i][j].y > low_p.y )
-					low_p = contours[i][j];
-			}
-
+		number_of_contours = contours.size();
+		for(int i = 0; i < number_of_contours; i++ ) {
 			// correct for perspective based on lowest point
-			double perspective_para = 0;
-			for (int j = low_p.y; j < perspective_matrix.rows ;j++){
-				perspective_para = perspective_matrix.at<float>(j, low_p.x);
-				if (perspective_para > 0 )
+			for (int j = lowest_point.y; j < perspective_matrix.rows ;j++){
+				perspective_multiplier = perspective_matrix.at<float>(j, lowest_point_vector[i].x);
+				if (perspective_multiplier > 0 )
 					break;
 			}
 			individual_blob = cv::Scalar(0);
 			cv::drawContours(individual_blob, contours, i, 255, CV_FILLED, 8, hierarchy, 0, cv::Point() );
-			frame_feature += sum(individual_blob)[0] * pow(perspective_para,2.0);
+			frame_feature += sum(individual_blob)[0] * pow(perspective_multiplier,2.0);
 		}
 	}
 
