@@ -311,6 +311,7 @@ int main(int argc, char *argv[])  {
 			std::cout << "\nPAUSED ALGORITHM -- press any key to continue" << std::endl;
 			cv::waitKey(0);
 			key = -1;
+			std::cout << "\nResumed" << std::endl;
 		}
 		/*
 		if (!setup_ROI && !setup_perspective) {
