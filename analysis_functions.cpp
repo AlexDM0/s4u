@@ -97,8 +97,8 @@ void bgfgImage(cv::Mat& resized_frame,
 			std::cout << "Training Backgrounds: Cycles left: " << training_cycles << " camera pos: " << cycle_position << std::endl;
 	}
 
-	// run the processing part of the algorithm after the initial background training for the amount of processing_frames
-	if (frame_counter > background_training_frames && frame_counter <= (background_training_frames+processing_frames) && !training_only) {
+	// run the processing part of the algorithm after the initial background training for the amount of processing_frames (after the processing frames, the code wont call this function for this camera anymore)
+	if (frame_counter > background_training_frames && !training_only) {
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
 
 		/* Apply dilation operation */

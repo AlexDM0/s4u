@@ -1,22 +1,3 @@
-/*
-int main()
-{
-  LARGE_INTEGER start, end, freq;
-
-  QueryPerformanceFrequency(&freq);
-  QueryPerformanceCounter(&start);
-
-  some_operation();
-
-  QueryPerformanceCounter(&end);
-
-  std::cout << "The resolution of this timer is: " << freq.QuadPart << " Hz." << std::endl;
-  std::cout << "Time to calculate some_operation(): "
-            << (end.QuadPart - start.QuadPart) * 1000000 / freq.QuadPart
-            << " microSeconds" << std::endl;
-}
-
-*/
 #include "opencv2/opencv.hpp"
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -35,164 +16,126 @@ int main()
 
 bool ENABLE_PROFILER = false;
 
-bool setup(
-			bool& setup_ROI,
-			bool& roi_masks_created,
-			bool& setup_perspective,
-			bool& perspective_matrices_loaded,
-			int& cycle_position,
-			int& amount_of_cameras,
-			int& save_frame,
-			double& scale_factor,
-			cv::Mat& resized_frame,
-			cv::Mat& frame,
-			std::vector<cv::Mat>& camera_frames,
-			std::vector<cv::Mat>& ROI_masks,
-			std::vector<cv::Mat>& perspective_matrices,
-			std::vector<std::vector<cv::Mat> >& camera_clips
-			) {
-	// after creation of the ROI the program has to be restarted.
-	if (setup_ROI) {
-		if (!handleROI(camera_frames, frame, cycle_position, amount_of_cameras, ROI_masks))
-			return false;
-	}
-
-
-	if (!roi_masks_created && !setup_ROI) {
-		std::cout << "Creating the Region of Interest masks... ";
-		// we use the fullsize region of interest with the perspective setup.
-		ROI_masks.clear();
-		if (setup_perspective) {
-			createROImasks(ROI_masks, amount_of_cameras, frame, 1.0);
-			std::cout << "Creating ROI masks for perspective...";
-		}
-		else
-			createROImasks(ROI_masks, amount_of_cameras, frame, scale_factor);
-		std::cout << "Done." << std::endl;
-		roi_masks_created = true;
-	}
-
-	// applying ROI mask to the frame
-	if (!setup_ROI)
-		applyROImaskToFrame(resized_frame,ROI_masks,cycle_position);
-
-	// after creation of the perspectives the program has to be restarted.
-	if (!setup_ROI) {
-		if (setup_perspective) {
-			applyROImaskToFrame(frame,ROI_masks,cycle_position);
-			if (!handlePerspectives(camera_clips, frame, cycle_position, amount_of_cameras, save_frame))
-				return false;
-		}
-	}
-
-	// loading the perspective matrices into memory
-	if (!perspective_matrices_loaded && !setup_perspective) {
-		std::cout << "Loading the perspective matrices";
-		perspective_matrices.clear();
-		loadPerspectiveMatrices(perspective_matrices, amount_of_cameras, frame, scale_factor);
-		perspective_matrices_loaded = true;
-		std::cout << "Done" << std::endl;
-	}
-	return true;
-}
-
 int main(int argc, const char** argv) {
-	std::string video_address = "rtsp://127.0.0.1:8554/";
+	/* ===========================================================================================*/
+	/* ============  				INITIAL SETUP AND CONFIGURATION			======================*/
+	/* ===========================================================================================*/
 
-	// connect to video stream
-	std::cout << "Opening video stream at: \n" << video_address;
-	cv::VideoCapture img_stream;
-	if (!getImageStream(video_address,img_stream)) {
-		std::cout << "Could not open video feed @ " << video_address << std::endl;
-		return -1;
-	}
-	std::cout << "\n Done.\n" << std::endl;
+		std::string video_address = "rtsp://127.0.0.1:8554/";
 
-	// get the camera cycle vector
-	std::vector<int> camera_cycle;
-	getCameraCycle(camera_cycle);
-	int amount_of_cameras = camera_cycle.size();
-
-	// train the OCR
-	std::cout << "Training OCR... ";
-	cv::KNearest OCR;
-	if (!trainOCR(OCR)) {
-		std::cout << "Failed getting OCR Data" << std::endl;
-		return -1;
-	}
-	std::cout << "Done." << std::endl;
-
-	// check if the Regions of Interest are defined
-	std::cout << "Checking Region of Interest... ";
-	bool setup_ROI = !checkROI(amount_of_cameras);
-	if (setup_ROI)
-		std::cout << "ROI is not defined yet." << std::endl;
-	else
-		std::cout << "Done." << std::endl;
-
-	// check if the Perspectives are defined
-	std::cout << "Checking perspectives... ";
-	bool setup_perspective = !checkPerspectives(amount_of_cameras);
-	if (setup_perspective)
-		std::cout << "Perspectives are not defined yet." << std::endl;
-	else
-		std::cout << "Done." << std::endl;
-
-	// initialize the variables
-	cv::Mat frame, resized_frame, gray, gray_previous, gray_difference, foreground_mask, test;
-	std::vector<cv::Mat> backgrounds, ROI_masks, perspective_matrices;
-	std::vector<cv::Mat> camera_frames (amount_of_cameras);
-	std::vector<std::vector<cv::Mat> > camera_clips (amount_of_cameras);
-	std::vector<cv::BackgroundSubtractorMOG2> background_model_vector(amount_of_cameras);
-	std::vector<std::vector<float> > training_coefficients;
-
-	// initialize the integers
-	int frame_counter = 0;					int cycle_position = 0;				int previous_cycle_position = 0;
-	int prev_found_position = 0;			int successful_ocr = 0;				int failed_ocr = 0;
-	int amount_of_camera_switches = 0;		int number_of_deviations = 0; 		int save_frame = 0;
-	int cycle = 0;
-	//int key = -1;
-
-	// initialize the booleans
-	bool initialization_complete = false;	bool previous_camera_offline = false;		bool start_analysis = false;
-	bool roi_masks_created = false;			bool perspective_matrices_loaded = false;	bool offline_camera_switched = false;
-
-	// initialize and set configuration variables
-	int minimum_amount_of_switches = 10;
-	double scale_factor = 1;
-	double learning_rate = 0.005;
-	int amount_of_training_cycles = -5;
-	int amount_of_training_cycles_from_nothing = 20;
-	int background_training_frames = 55;
-	int processing_frames = 5;
-	int maximum_frame_threshold = background_training_frames + processing_frames + 1;
-	int amount_of_training_coefficients = 5;
-	double frame_feature = 0;
-	double sum_feature = 0;
-	double max_perspective_multiplier = 5;
-	profiler timer(ENABLE_PROFILER);
-
-	// check if the system is Trained (features-to-people).
-	// We allow the system to pass if the ROI or the Perspectives need to be set up.
-	// After ROI or perspective changes, the system HAS to be retrained.
-	if (!setup_ROI && !setup_perspective) {
-		std::cout << "Checking training status... ";
-		if (checkTrainingStatus(amount_of_cameras,amount_of_training_coefficients)) {
-			getTrainedCoefficients(training_coefficients);
-			std::cout << "Done." << std::endl;
-		}
-		else {
-			std::cout << "The system needs to be trained first: coefficients.txt cannot be found or has the wrong dimensions." << std::endl;
-			std::cout << "Expecting format: " << amount_of_training_coefficients << "x" << amount_of_cameras << ", comma separated. Quitting.." << std::endl;
+		// connect to video stream
+		std::cout << "Opening video stream at: \n" << video_address;
+		cv::VideoCapture img_stream;
+		if (!getImageStream(video_address,img_stream)) {
+			std::cout << "Could not open video feed @ " << video_address << std::endl;
 			return -1;
 		}
-	}
+		std::cout << "\n Done.\n" << std::endl;
 
-	// determine how many cycles the background should be trained before the analysis begins.
-	// this requires a LOT of memory
-	std::cout << "Getting the amount of required training cycles: ";
-	int training_cycles = initializeBackgrounds(background_model_vector, learning_rate, amount_of_training_cycles, amount_of_training_cycles_from_nothing) + 1;
-	std::cout << training_cycles - 1 << "." << std::endl;
+		// get the camera cycle vector
+		std::vector<int> camera_cycle;
+		getCameraCycle(camera_cycle);
+		int amount_of_cameras = camera_cycle.size();
+
+		// train the OCR
+		std::cout << "Training OCR... ";
+		cv::KNearest OCR;
+		if (!trainOCR(OCR)) {
+			std::cout << "Failed getting OCR Data" << std::endl;
+			return -1;
+		}
+		std::cout << "Done." << std::endl;
+
+		// check if the Regions of Interest are defined
+		std::cout << "Checking Region of Interest... ";
+		bool setup_ROI = !checkROI(amount_of_cameras);
+		if (setup_ROI)
+			std::cout << "ROI is not defined yet." << std::endl;
+		else
+			std::cout << "Done." << std::endl;
+
+		// check if the Perspectives are defined
+		std::cout << "Checking perspectives... ";
+		bool setup_perspective = !checkPerspectives(amount_of_cameras);
+		if (setup_perspective)
+			std::cout << "Perspectives are not defined yet." << std::endl;
+		else
+			std::cout << "Done." << std::endl;
+
+
+	/* ===========================================================================================*/
+	/* ============  		Finished setup and config, create vars			======================*/
+	/* ===========================================================================================*/
+
+
+		// create profiler
+		profiler timer(ENABLE_PROFILER);
+
+		// initialize the variables
+		cv::Mat frame, resized_frame, gray, gray_previous, gray_difference, foreground_mask, test;
+		std::vector<cv::Mat> backgrounds, ROI_masks, perspective_matrices;
+		std::vector<cv::Mat> camera_frames (amount_of_cameras);
+		std::vector<std::vector<cv::Mat> > camera_clips (amount_of_cameras);
+		std::vector<cv::BackgroundSubtractorMOG2> background_model_vector(amount_of_cameras);
+		std::vector<std::vector<float> > training_coefficients;
+
+		// initialize the integers
+		int frame_counter = 0;					int cycle_position = 0;				int previous_cycle_position = 0;
+		int prev_found_position = 0;			int successful_ocr = 0;				int failed_ocr = 0;
+		int amount_of_camera_switches = 0;		int number_of_deviations = 0; 		int save_frame = 0;
+		int cycle = 0;
+		//int key = -1;
+
+		// initialize the booleans
+		bool initialization_complete = false;	bool previous_camera_offline = false;		bool start_analysis = false;
+		bool roi_masks_created = false;			bool perspective_matrices_loaded = false;	bool offline_camera_switched = false;
+
+		// initialize and set configuration variables
+		int minimum_amount_of_switches = 10;
+		double scale_factor = 1;
+		double learning_rate = 0.005;
+		int amount_of_training_cycles = 5;
+		int amount_of_training_cycles_from_nothing = 20;
+		int background_training_frames = 55;
+		int processing_frames = 5;
+		int maximum_frame_threshold = background_training_frames + processing_frames + 1;
+		int amount_of_training_coefficients = 5;
+		double frame_feature = 0;
+		double sum_feature = 0;
+		double max_perspective_multiplier = 5;
+
+
+	/* ===========================================================================================*/
+	/* ============  	Determining if system has trained coefficients		======================*/
+	/* ===========================================================================================*/
+
+		// check if the system is Trained (features-to-people).
+		// We allow the system to pass if the ROI or the Perspectives need to be set up.
+		// After ROI or perspective changes, the system HAS to be retrained.
+		if (!setup_ROI && !setup_perspective) {
+			std::cout << "Checking training status... ";
+			if (checkTrainingStatus(amount_of_cameras,amount_of_training_coefficients)) {
+				getTrainedCoefficients(training_coefficients);
+				std::cout << "Done." << std::endl;
+			}
+			else {
+				std::cout << "The system needs to be trained first: coefficients.txt cannot be found or has the wrong dimensions." << std::endl;
+				std::cout << "Expecting format: " << amount_of_training_coefficients << "x" << amount_of_cameras << ", comma separated. Quitting.." << std::endl;
+				return -1;
+			}
+		}
+
+		// determine how many cycles the background should be trained before the analysis begins.
+		// this requires a LOT of memory
+		std::cout << "Getting the amount of required training cycles: ";
+		int training_cycles = initializeBackgrounds(background_model_vector, learning_rate, amount_of_training_cycles, amount_of_training_cycles_from_nothing) + 1;
+		std::cout << training_cycles - 1 << "." << std::endl;
+
+
+	/* ===========================================================================================*/
+	/* ============  					Starting algorithm					======================*/
+	/* ===========================================================================================*/
+
 
 	// start the image cycle
 	for(;;) {
@@ -247,6 +190,7 @@ int main(int argc, const char** argv) {
 		}
 
 		if (start_analysis && initialization_complete && frame_counter < maximum_frame_threshold) {
+			// resize if required
 			if (!setup_ROI && !setup_perspective && scale_factor != 1)
 				cv::resize(frame, resized_frame, cv::Size(scale_factor*frame.cols, scale_factor*frame.rows));
 			else

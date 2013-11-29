@@ -1,6 +1,24 @@
 #pragma once
 
-//misc
+// setup functions
+	bool setup(
+			bool& setup_ROI,
+			bool& roi_masks_created,
+			bool& setup_perspective,
+			bool& perspective_matrices_loaded,
+			int& cycle_position,
+			int& amount_of_cameras,
+			int& save_frame,
+			double& scale_factor,
+			cv::Mat& resized_frame,
+			cv::Mat& frame,
+			std::vector<cv::Mat>& camera_frames,
+			std::vector<cv::Mat>& ROI_masks,
+			std::vector<cv::Mat>& perspective_matrices,
+			std::vector<std::vector<cv::Mat> >& camera_clips
+			);
+
+// misc functions
 	bool readCSV(std::string filename, int x, int y);
 
 	bool readCSV(std::string filename, std::vector< std::vector<float> >& content);
