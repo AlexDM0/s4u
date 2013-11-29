@@ -38,7 +38,7 @@ void writeResults(double value, double std, int cycle_position) {
 
 }
 
-void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients) {
+double convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients) {
 	// this should convert the features to people
 	// the formula used for the features is a*x^b where x is features
 	// the forumla used for the std is features is [(c*x^d + e) - number_of_people] where x is number of people
@@ -52,4 +52,5 @@ void convertFeaturesToPeople(double features, int cycle_position, std::vector<st
 	double std = round(c*pow(people,d) + e) - people;
 
 	writeResults(people,std,cycle_position);
+	return people;
 }

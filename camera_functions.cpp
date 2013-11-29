@@ -41,6 +41,40 @@ void getCameraCycle(std::vector<int>& camera_cycle) {
 	camera_cycle.push_back(717);	// 30
 }
 
+void getActiveCameras(std::vector<int>& active_cameras) {
+	active_cameras.push_back(0);	// 0
+	active_cameras.push_back(1);	// 1
+	active_cameras.push_back(0);	// 2
+	active_cameras.push_back(1);	// 3
+	active_cameras.push_back(1);	// 4
+	active_cameras.push_back(1);	// 5
+	active_cameras.push_back(1);	// 6
+	active_cameras.push_back(0);	// 7
+	active_cameras.push_back(0);	// 8
+	active_cameras.push_back(1);	// 9
+	active_cameras.push_back(1);	// 10
+	active_cameras.push_back(0);	// 11
+	active_cameras.push_back(0);	// 12
+	active_cameras.push_back(1);	// 13
+	active_cameras.push_back(1);	// 14
+	active_cameras.push_back(1);	// 15
+	active_cameras.push_back(1);	// 16
+	active_cameras.push_back(1);	// 17
+	active_cameras.push_back(1);	// 18
+	active_cameras.push_back(1);	// 19
+	active_cameras.push_back(0);	// 20
+	active_cameras.push_back(0);	// 21
+	active_cameras.push_back(1);	// 22
+	active_cameras.push_back(0);	// 23
+	active_cameras.push_back(1);	// 24
+	active_cameras.push_back(1);	// 25
+	active_cameras.push_back(0);	// 26
+	active_cameras.push_back(1);	// 27
+	active_cameras.push_back(1);	// 28
+	active_cameras.push_back(1);	// 29
+	active_cameras.push_back(0);	// 30
+}
+
 bool isCameraOffline(cv::Mat& rgb_image) {
 	int r_target = 29;
 	int g_target = 43;

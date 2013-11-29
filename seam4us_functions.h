@@ -82,6 +82,8 @@
 // camera functions
 	void getCameraCycle(std::vector<int>& camera_cycle);
 
+	void getActiveCameras(std::vector<int>& active_cameras);
+
 	bool isCameraOffline(cv::Mat& rgb_image);
 
 	bool isCameraSwitching(int& frame_counter,
@@ -148,7 +150,7 @@
 // data writing functions
 	void writeResults(double value, double std, int cycle_position);
 
-	void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients);
+	double convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients);
 
 
 

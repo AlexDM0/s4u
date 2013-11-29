@@ -16,12 +16,22 @@
 
 bool ENABLE_PROFILER = false;
 
-int main(int argc, const char** argv) {
+int main(int argc, char *argv[])  {
+	std::cout << "Starting Demo \n \n";
+	int amount_of_training_cycles = 10;
+	if (argc == 2) {
+		std::cout << "\n";
+		amount_of_training_cycles = atoi(argv[1]);
+		std::cout << "Argument values: amount_of_training_cycles: " << amount_of_training_cycles << "\n\n";
+	}
+
+
+
 	/* ===========================================================================================*/
 	/* ============  				INITIAL SETUP AND CONFIGURATION			======================*/
 	/* ===========================================================================================*/
 
-		std::string video_address = "rtsp://127.0.0.1:8554/";
+		std::string video_address = "movie.mp4";
 
 		// connect to video stream
 		std::cout << "Opening video stream at: \n" << video_address;
@@ -34,7 +44,9 @@ int main(int argc, const char** argv) {
 
 		// get the camera cycle vector
 		std::vector<int> camera_cycle;
+		std::vector<int> active_cameras;
 		getCameraCycle(camera_cycle);
+		getActiveCameras(active_cameras);
 		int amount_of_cameras = camera_cycle.size();
 
 		// train the OCR
@@ -84,7 +96,7 @@ int main(int argc, const char** argv) {
 		int prev_found_position = 0;			int successful_ocr = 0;				int failed_ocr = 0;
 		int amount_of_camera_switches = 0;		int number_of_deviations = 0; 		int save_frame = 0;
 		int cycle = 0;
-		//int key = -1;
+		int key = -1;
 
 		// initialize the booleans
 		bool initialization_complete = false;	bool previous_camera_offline = false;		bool start_analysis = false;
@@ -94,7 +106,7 @@ int main(int argc, const char** argv) {
 		int minimum_amount_of_switches = 10;
 		double scale_factor = 1;
 		double learning_rate = 0.005;
-		int amount_of_training_cycles = 5;
+
 		int amount_of_training_cycles_from_nothing = 20;
 		int background_training_frames = 55;
 		int processing_frames = 5;
@@ -251,9 +263,14 @@ int main(int argc, const char** argv) {
 				    	// get the average
 				    	sum_feature = sum_feature/processing_frames;
 
+				    	double people;
 				    	// write the framedata to disk
-				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
-
+				    	people = convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
+				    	if (active_cameras[cycle_position] == 0)
+				    		cv::putText(resized_frame, "Camera will be ignored.", cv::Point(resized_frame.cols/2 - 300,70), cv::FONT_HERSHEY_TRIPLEX, 0.8, cv::Scalar(30,30,255),1);
+				    	cv::putText(resized_frame, addStr("# people: ",people, "    camerapos: ", cycle_position), cv::Point(resized_frame.cols/2 - 300,30), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(30,30,255),2);
+				    	cv::imshow("Result", resized_frame);
+				    	key = cv::waitKey(1);
 				    	// reset sum feature
 				    	sum_feature = 0;
 				    }
@@ -275,6 +292,11 @@ int main(int argc, const char** argv) {
 								max_perspective_multiplier,
 								training_cycles
 								);
+
+					cv::putText(resized_frame, addStr("Training Backgrounds: Cycles left: ", training_cycles," camera pos: " ,cycle_position), cv::Point(resized_frame.cols/2 - 300,80), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(30,30,255),1);
+					cv::putText(resized_frame, "Training background", cv::Point(resized_frame.cols/2 - 300,30), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(30,30,255),2);
+					cv::imshow("Result", resized_frame);
+					key = cv::waitKey(1);
 				}
 
 				// updating the cycle position
@@ -306,11 +328,11 @@ int main(int argc, const char** argv) {
 			key = -1;
 			std::cout << "entering the region-of-interest editor." << std::endl;
 		}
+		*/
 		else if(key == 27) {
 			std::cout << key << std::endl;
 			break;
 		}
-		*/
 		frame_counter += 1;
 	}
     return 0;
