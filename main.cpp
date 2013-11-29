@@ -307,7 +307,11 @@ int main(int argc, char *argv[])  {
 			// intermediate step while the position within the cycle is being determined
 		}
 
-
+		if (key == 32) { // space -- pause
+			std::cout << "\nPAUSED ALGORITHM -- press any key to continue" << std::endl;
+			cv::waitKey(0);
+			key = -1;
+		}
 		/*
 		if (!setup_ROI && !setup_perspective) {
 			cv::imshow("feed", frame);
