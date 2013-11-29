@@ -55,8 +55,8 @@ void bgfgImage(cv::Mat& resized_frame,
 				int cycle_position,
 				double scale_factor,
 				double learning_rate,
-				int image_processing_threshold,
-				int maximum_frame_threshold,
+				int background_training_frames,
+				int processing_frames,
 				bool training_only,
 				cv::Mat perspective_matrix,
 				double& frame_feature,
@@ -89,14 +89,16 @@ void bgfgImage(cv::Mat& resized_frame,
 	// background subtraction -- this trains the background
 	bg_model(img, fgmask, learning_rate);
 
-	if (frame_counter == maximum_frame_threshold - 1) {
+	// the last time this camera background is trained we save it
+	if (frame_counter == background_training_frames+processing_frames) {
 		bg_model.getBackgroundImage(background_image);
 		cv::imwrite(addStr("data/backgrounds/background_",cycle_position,".png"),background_image);
 		if (training_only)
 			std::cout << "Training Backgrounds: Cycles left: " << training_cycles << " camera pos: " << cycle_position << std::endl;
 	}
 
-	if (frame_counter > 60 && !training_only) {
+	// run the processing part of the algorithm after the initial background training for the amount of processing_frames
+	if (frame_counter > background_training_frames && frame_counter <= (background_training_frames+processing_frames) && !training_only) {
 		cv::threshold(fgmask, fgmask, 0, 255, 0);
 
 		/* Apply dilation operation */

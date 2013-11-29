@@ -97,13 +97,13 @@ bool setup(
 }
 
 int main(int argc, const char** argv) {
-	std::string video_address = "C:/Data from server/saturday.mp4";
+	std::string video_address = "rtsp://127.0.0.1:8554/";
 
 	// connect to video stream
 	std::cout << "Opening video stream at: \n" << video_address;
 	cv::VideoCapture img_stream;
 	if (!getImageStream(video_address,img_stream)) {
-		std::cout << "Could not open video feed." << std::endl;
+		std::cout << "Could not open video feed @ " << video_address << std::endl;
 		return -1;
 	}
 	std::cout << "\n Done.\n" << std::endl;
@@ -161,11 +161,11 @@ int main(int argc, const char** argv) {
 	int minimum_amount_of_switches = 10;
 	double scale_factor = 1;
 	double learning_rate = 0.005;
-	int maximum_frame_threshold = 65;
 	int amount_of_training_cycles = -5;
 	int amount_of_training_cycles_from_nothing = 20;
-	int image_processing_threshold = 60;
-	int averaging_frames = 4;
+	int background_training_frames = 55;
+	int processing_frames = 5;
+	int maximum_frame_threshold = background_training_frames + processing_frames + 1;
 	int amount_of_training_coefficients = 5;
 	double frame_feature = 0;
 	double sum_feature = 0;
@@ -252,6 +252,7 @@ int main(int argc, const char** argv) {
 			else
 				frame.copyTo(resized_frame);
 
+			// get the ROI and perspective if needed and apply the ROI
 			if (!setup(	setup_ROI,
 						roi_masks_created,
 						setup_perspective,
@@ -280,7 +281,7 @@ int main(int argc, const char** argv) {
 
 				// once the backgrounds are trained, start the processing
 				if (training_cycles <= 0) {
-					timer.start("processing and background function");
+					// run the processing function
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
 								ROI_masks,
@@ -288,26 +289,33 @@ int main(int argc, const char** argv) {
 								cycle_position,
 								scale_factor,
 								learning_rate,
-								image_processing_threshold,
-								maximum_frame_threshold,
+								background_training_frames,
+								processing_frames,
 								false,
 								perspective_matrices.at(cycle_position),
 								frame_feature,
 								max_perspective_multiplier,
 								training_cycles
 								);
-					timer.end();
 
-				    if (frame_counter > image_processing_threshold)
-						sum_feature  = sum_feature + frame_feature;
+					// calculations are running and feature average for process_frames amount of frames are calculated
+				    if (frame_counter > background_training_frames)
+						sum_feature = sum_feature + frame_feature;
 
-				    if (frame_counter == image_processing_threshold + averaging_frames){
-				    	sum_feature = sum_feature/averaging_frames;
+				    // calculations for camera are complete
+				    if (frame_counter == background_training_frames + processing_frames){
+				    	// get the average
+				    	sum_feature = sum_feature/processing_frames;
+
 				    	// write the framedata to disk
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
+
+				    	// reset sum feature
+				    	sum_feature = 0;
 				    }
 				}
-				else { // this only trains the background
+				else {
+					// this only trains the background because training_only == true
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
 								ROI_masks,
@@ -315,8 +323,8 @@ int main(int argc, const char** argv) {
 								cycle_position,
 								scale_factor,
 								learning_rate,
-								image_processing_threshold,
-								maximum_frame_threshold,
+								background_training_frames,
+								processing_frames,
 								true,
 								perspective_matrices.at(cycle_position),
 								frame_feature,
