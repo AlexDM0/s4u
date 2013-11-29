@@ -40,16 +40,16 @@ void writeResults(double value, double std, int cycle_position) {
 
 void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients) {
 	// this should convert the features to people
-	// the formula used for the features is a*x^b
-	// the forumla used for the std is features is c*x^d + e
+	// the formula used for the features is a*x^b where x is features
+	// the forumla used for the std is features is [(c*x^d + e) - number_of_people] where x is number of people
 	// the format of the csv is a,b,c,d,e
 	float a = training_coefficients[cycle_position][0];
 	float b = training_coefficients[cycle_position][1];
 	float c = training_coefficients[cycle_position][2];
 	float d = training_coefficients[cycle_position][3];
 	float e = training_coefficients[cycle_position][4];
-	double people = a*pow(features,b);
-	double std = c*pow(features,d) + e - people;
+	double people = round(a*pow(features,b));
+	double std = round(c*pow(people,d) + e) - people;
 
 	writeResults(people,std,cycle_position);
 }

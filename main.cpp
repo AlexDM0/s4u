@@ -147,9 +147,11 @@ int main(int argc, const char** argv) {
 	std::vector<std::vector<float> > training_coefficients;
 
 	// initialize the integers
-	int key = -1;							int frame_counter = 0;				int cycle_position = 0;		int previous_cycle_position = 0;
-	int prev_found_position = 0;			int successful_ocr = 0;				int failed_ocr = 0;			int cycle = 0;
+	int frame_counter = 0;					int cycle_position = 0;				int previous_cycle_position = 0;
+	int prev_found_position = 0;			int successful_ocr = 0;				int failed_ocr = 0;
 	int amount_of_camera_switches = 0;		int number_of_deviations = 0; 		int save_frame = 0;
+	int cycle = 0;
+	//int key = -1;
 
 	// initialize the booleans
 	bool initialization_complete = false;	bool previous_camera_offline = false;		bool start_analysis = false;
@@ -160,8 +162,8 @@ int main(int argc, const char** argv) {
 	double scale_factor = 1;
 	double learning_rate = 0.005;
 	int maximum_frame_threshold = 65;
-	int amount_of_training_cycles = 60;
-	int amount_of_training_cycles_from_nothing = 0;
+	int amount_of_training_cycles = -5;
+	int amount_of_training_cycles_from_nothing = 20;
 	int image_processing_threshold = 60;
 	int averaging_frames = 4;
 	int amount_of_training_coefficients = 5;
@@ -169,11 +171,6 @@ int main(int argc, const char** argv) {
 	double sum_feature = 0;
 	double max_perspective_multiplier = 5;
 	profiler timer(ENABLE_PROFILER);
-
-	// save results in file
-	std::ofstream Counting_file;
-	Counting_file.open("friday_1_People_counting.txt");
-	int sample_frame = 1 ;
 
 	// check if the system is Trained (features-to-people).
 	// We allow the system to pass if the ROI or the Perspectives need to be set up.
@@ -192,6 +189,7 @@ int main(int argc, const char** argv) {
 	}
 
 	// determine how many cycles the background should be trained before the analysis begins.
+	// this requires a LOT of memory
 	std::cout << "Getting the amount of required training cycles: ";
 	int training_cycles = initializeBackgrounds(background_model_vector, learning_rate, amount_of_training_cycles, amount_of_training_cycles_from_nothing) + 1;
 	std::cout << training_cycles - 1 << "." << std::endl;
@@ -203,7 +201,6 @@ int main(int argc, const char** argv) {
 
 		// if the frame is empty, close the program.
 		if(frame.empty()) {
-			Counting_file.close();
 			std::cout << "No more frames available. Closing program." << std::endl;
 			break;
 		}
@@ -306,18 +303,8 @@ int main(int argc, const char** argv) {
 
 				    if (frame_counter == image_processing_threshold + averaging_frames){
 				    	sum_feature = sum_feature/averaging_frames;
-
 				    	// write the framedata to disk
 				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
-
-				    	std::cout << sample_frame << ";" << cycle_position << ";" << sum_feature << std::endl;
-
-				    	// write it to a file for labelling
-				    	//Counting_file << sample_frame << ";" << cycle_position << ";" << sum_feature << "\n";
-				    	//cv::imwrite(addStr("data/samples/",sample_frame,".png"),resized_frame);
-
-				    	sum_feature = 0;
-				    	sample_frame++;
 				    }
 				}
 				else { // this only trains the background
@@ -336,25 +323,22 @@ int main(int argc, const char** argv) {
 								max_perspective_multiplier,
 								training_cycles
 								);
-//					cv::putText(frame, "Training Backgrounds.", cv::Point(150,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
-//					cv::putText(frame, addStr("Cycles left: ",training_cycles), cv::Point(150,130), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 				}
 
 				// updating the cycle position
 				previous_cycle_position = cycle_position;
 			}
-			//cv::putText(frame, addStr("camID: ", camera_cycle[cycle_position], " pos: ",cycle_position), cv::Point(200,60), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0,0,255));
 		}
 		else if (start_analysis) {
 			// intermediate step while the position within the cycle is being determined
-			//cv::putText(frame, "Initializing System.", cv::Point(200,100), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255,255,255),2);
 		}
 
 
-//		if (!setup_ROI && !setup_perspective) {
-//			cv::imshow("feed", frame);
-//			key = cv::waitKey(1);
-//		}
+		/*
+		if (!setup_ROI && !setup_perspective) {
+			cv::imshow("feed", frame);
+			key = cv::waitKey(1);
+		}
 
 
 		if (key == 112) { // p -- open perspective editor
@@ -374,8 +358,8 @@ int main(int argc, const char** argv) {
 			std::cout << key << std::endl;
 			break;
 		}
+		*/
 		frame_counter += 1;
 	}
-	Counting_file.close();
     return 0;
 }
