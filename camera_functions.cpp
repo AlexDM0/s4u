@@ -7,38 +7,73 @@
 #include <seam4us_functions.h>
 #include <template_functions.hpp>
 
+/*
+void getActiveCameras(std::vector<int>& active_cameras) {
+	active_cameras.push_back(0);	// 0
+	active_cameras.push_back(1);	// 1
+	active_cameras.push_back(0);	// 2
+	active_cameras.push_back(1);	// 3
+	active_cameras.push_back(1);	// 4
+	active_cameras.push_back(1);	// 5
+	active_cameras.push_back(1);	// 6
+	active_cameras.push_back(0);	// 7
+	active_cameras.push_back(0);	// 8
+	active_cameras.push_back(1);	// 9
+	active_cameras.push_back(1);	// 10
+	active_cameras.push_back(0);	// 11
+	active_cameras.push_back(0);	// 12
+	active_cameras.push_back(1);	// 13
+	active_cameras.push_back(1);	// 14
+	active_cameras.push_back(1);	// 15
+	active_cameras.push_back(1);	// 16
+	active_cameras.push_back(1);	// 17
+	active_cameras.push_back(1);	// 18
+	active_cameras.push_back(1);	// 19
+	active_cameras.push_back(0);	// 20
+	active_cameras.push_back(0);	// 21
+	active_cameras.push_back(1);	// 22
+	active_cameras.push_back(0);	// 23
+	active_cameras.push_back(1);	// 24
+	active_cameras.push_back(1);	// 25
+	active_cameras.push_back(0);	// 26
+	active_cameras.push_back(1);	// 27
+	active_cameras.push_back(1);	// 28
+	active_cameras.push_back(1);	// 29
+	active_cameras.push_back(0);	// 30
+}
+*/
 void getCameraCycle(std::vector<int>& camera_cycle) {
-	camera_cycle.push_back(734);	// 0
-	camera_cycle.push_back(7112);	// 1
-	camera_cycle.push_back(718);	// 2
-	camera_cycle.push_back(7111);	// 3
-	camera_cycle.push_back(7110);	// 4
-	camera_cycle.push_back(721);	// 5
-	camera_cycle.push_back(722);	// 6
-	camera_cycle.push_back(7113);	// 7
-	camera_cycle.push_back(7114);	// 8
-	camera_cycle.push_back(7100);	// 9
-	camera_cycle.push_back(7104);	// 10
-	camera_cycle.push_back(747);	// 11
-	camera_cycle.push_back(748);	// 12
-	camera_cycle.push_back(700);	// 13
-	camera_cycle.push_back(701);	// 14
-	camera_cycle.push_back(705);	// 15
-	camera_cycle.push_back(704);	// 16
-	camera_cycle.push_back(711);	// 17
-	camera_cycle.push_back(710);	// 18
-	camera_cycle.push_back(712);	// 19
-	camera_cycle.push_back(713);	// 20
-	camera_cycle.push_back(719);	// 21
-	camera_cycle.push_back(714);	// 22
-	camera_cycle.push_back(715);	// 23
-	camera_cycle.push_back(716);	// 24
-	camera_cycle.push_back(720);	// 25
-	camera_cycle.push_back(730);	// 26
-	camera_cycle.push_back(731);	// 27
-	camera_cycle.push_back(732);	// 28
-	camera_cycle.push_back(733);	// 29
-	camera_cycle.push_back(717);	// 30
+	//camera_cycle.push_back(734);	// 0  --  1
+	camera_cycle.push_back(7112);	// 1  --  2
+	//camera_cycle.push_back(718);	// 2  --  3
+	camera_cycle.push_back(7111);	// 3  --  4
+	camera_cycle.push_back(7110);	// 4  --  5
+	camera_cycle.push_back(721);	// 5  --  6
+	camera_cycle.push_back(722);	// 6  --  7
+	//camera_cycle.push_back(7113);	// 7  --  8
+	//camera_cycle.push_back(7114);	// 8  --  9
+	camera_cycle.push_back(7100);	// 9  --  10
+	camera_cycle.push_back(7104);	// 10 --  11
+//	camera_cycle.push_back(747);	// 11 --  12
+//	camera_cycle.push_back(748);	// 12 --  13
+	camera_cycle.push_back(700);	// 13 --  14
+	camera_cycle.push_back(701);	// 14 --  15
+	camera_cycle.push_back(705);	// 15 --  16
+	camera_cycle.push_back(704);	// 16 --  17
+	camera_cycle.push_back(711);	// 17 --  18
+	camera_cycle.push_back(710);	// 18 --  19
+	camera_cycle.push_back(712);	// 19 --  20
+	//camera_cycle.push_back(713);	// 20 --  21
+	//camera_cycle.push_back(719);	// 21 --  22
+	camera_cycle.push_back(714);	// 22 --  23
+	//camera_cycle.push_back(715);	// 23 --  24
+	camera_cycle.push_back(716);	// 24 --  25
+	camera_cycle.push_back(720);	// 25 --  26
+	//camera_cycle.push_back(730);	// 26 --  27
+	camera_cycle.push_back(731);	// 27 --  28
+	camera_cycle.push_back(732);	// 28 --  29
+	camera_cycle.push_back(733);	// 29 --  30
+	//camera_cycle.push_back(717);	// 30 --  31
 }
 
 bool isCameraOffline(cv::Mat& rgb_image) {
