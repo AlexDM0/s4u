@@ -146,9 +146,9 @@
 	int initializeBackgrounds(std::vector<cv::BackgroundSubtractorMOG2>& background_model_vector, double learning_rate, int amount_of_training_cycles, int amount_of_training_cycles_from_nothing);
 
 // data writing functions
-	void writeResults(double value, double std, int cycle_position);
+	void writeResults(double value, double std, int cameraID);
 
-	void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients);
+	void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients, int cameraID);
 
 
 

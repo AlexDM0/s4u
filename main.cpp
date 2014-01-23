@@ -252,7 +252,7 @@ int main(int argc, const char** argv) {
 				    	sum_feature = sum_feature/processing_frames;
 
 				    	// write the framedata to disk
-				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients);
+				    	convertFeaturesToPeople(sum_feature,cycle_position,training_coefficients,camera_cycle[cycle_position]);
 
 				    	// reset sum feature
 				    	sum_feature = 0;

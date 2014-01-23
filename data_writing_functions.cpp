@@ -14,7 +14,7 @@
 #include <seam4us_functions.h>
 #include <template_functions.hpp>
 
-void writeResults(double value, double std, int cycle_position) {
+void writeResults(double value, double std, int cameraID) {
 	// this should write the data to a text file
 	time_t t = time(0);   // get time now
 	struct tm * now = localtime( & t );
@@ -27,18 +27,29 @@ void writeResults(double value, double std, int cycle_position) {
 	std::cout << "Time: \t\t\t" << (now->tm_hour < 10 ? addStr("0",now->tm_hour) : toStr(now->tm_hour)) << ':' << (now->tm_min < 10 ? addStr("0",now->tm_min) : toStr(now->tm_min)) << ':' <<  (now->tm_sec < 10 ? addStr("0",now->tm_sec) : toStr(now->tm_sec)) << std::endl;
 */
 	std::ofstream datafile;
-	datafile.open("output_data.txt");
+	datafile.open("output_data.csv");
+	datafile << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday;
+	datafile << ",";
+	datafile << (now->tm_hour < 10 ? addStr("0",now->tm_hour) : toStr(now->tm_hour)) << ':' << (now->tm_min < 10 ? addStr("0",now->tm_min) : toStr(now->tm_min)) << ':' <<  (now->tm_sec < 10 ? addStr("0",now->tm_sec) : toStr(now->tm_sec));
+	datafile << ",";
+	datafile << value;
+	datafile << ",";
+	datafile << std;
+	datafile << ",";
+	datafile << cameraID;
+/*
 	datafile << "Category: \t\tNumber of People" << "\n";
 	datafile << "Date: \t\t\t" << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "\n";
 	datafile << "Number of People: \t" << value  << "\n";
 	datafile << "Standard Dev.: \t\t" << std << "\n";
-	datafile << "Cycle Pos: \t\t" << cycle_position << "\n";
+	datafile << "cameraID: \t\t" << cameraID << "\n";
 	datafile << "Time: \t\t\t" << (now->tm_hour < 10 ? addStr("0",now->tm_hour) : toStr(now->tm_hour)) << ':' << (now->tm_min < 10 ? addStr("0",now->tm_min) : toStr(now->tm_min)) << ':' <<  (now->tm_sec < 10 ? addStr("0",now->tm_sec) : toStr(now->tm_sec));
+*/
 	datafile.close();
 
 }
 
-void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients) {
+void convertFeaturesToPeople(double features, int cycle_position, std::vector<std::vector<float> >& training_coefficients, int cameraID) {
 	// this should convert the features to people
 	// the formula used for the features is a*x^b where x is features
 	// the forumla used for the std is features is [(c*x^d + e) - number_of_people] where x is number of people
@@ -51,5 +62,5 @@ void convertFeaturesToPeople(double features, int cycle_position, std::vector<st
 	double people = round(a*pow(features,b));
 	double std = round(c*pow(people,d) + e) - people;
 
-	writeResults(people,std,cycle_position);
+	writeResults(people,std,cameraID);
 }
