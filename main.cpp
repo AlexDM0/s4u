@@ -161,7 +161,7 @@ int main(int argc, const char** argv) {
 				amount_of_camera_switches += 1;
 
 			if (offline_camera_switched) {
-				writeResults(-1.0,0,cycle_position);
+				writeResults(-1.0,0,camera_cycle[cycle_position]);
 				offline_camera_switched = false;
 			}
 			// Set expectation
