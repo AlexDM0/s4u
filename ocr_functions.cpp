@@ -105,25 +105,27 @@ bool determineCyclePosition(
 	// after the first ID, reference with previous ID
 	if (found_position > 0) {
 		successful_ocr += 1;
-		if (successful_ocr > 1) {
+		if (successful_ocr > 2) { // increased the number of successfull IDs to 2
 			if (found_position == prev_found_position) {
-				// if the OCR is not the predicted camera, ignore the OCR twice, if this happens again, accept OCR
-				if (found_position != cycle_position) {
-					if (number_of_deviations >= 2){
-						// We accept the identification.
-						cycle_position = found_position;
-						number_of_deviations = 0;
-					}
-					else {
-						// We use the expectation
-						number_of_deviations += 1;
-					}
-				}
-				else {
-					// We accept the identification.
-					// Since it is the same as the expected position, we don't need to set cycle_position
-					number_of_deviations = 0;
-				}
+				// broken camera delivers faulty frames. We will trust the ocr implicitly
+
+				// if the OCR is not the predicted camera, ignore the OCR once, if this happens again, accept OCR
+//				if (found_position != cycle_position) {
+//					if (number_of_deviations >= 1){
+//						// We accept the identification.
+				cycle_position = found_position;
+//						number_of_deviations = 0;
+//					}
+//					else {
+//						// We use the expectation
+//						number_of_deviations += 1;
+//					}
+//				}
+//				else {
+//					// We accept the identification.
+//					// Since it is the same as the expected position, we don't need to set cycle_position
+//					number_of_deviations = 0;
+//				}
 				return true;
 			}
 			else

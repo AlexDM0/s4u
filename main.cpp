@@ -136,6 +136,10 @@ int main(int argc, const char** argv) {
 	/* ============  					Starting algorithm					======================*/
 	/* ===========================================================================================*/
 
+	std::ofstream datafile;
+	datafile.open("training.dat");
+	datafile.close();
+	bool trainingFileRemoved = false;
 
 	// start the image cycle
 	for(;;) {
@@ -225,6 +229,12 @@ int main(int argc, const char** argv) {
 
 				// once the backgrounds are trained, start the processing
 				if (training_cycles <= 0) {
+					if (trainingFileRemoved == false) {
+						remove( "training.dat" );
+						trainingFileRemoved = true;
+					}
+
+
 					// run the processing function
 					bgfgImage(resized_frame,
 								background_model_vector.at(cycle_position),
